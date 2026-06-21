@@ -21,3 +21,4 @@ IA_Viva_Arena_Darwiniana/
 
 # Ignorar archivos binarios Pickle (datos de simulación locales)
 *.pkl
+!logs/cerebro_unico_state.pkl
