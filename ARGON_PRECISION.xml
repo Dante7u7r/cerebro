@@ -1,0 +1,16 @@
+<repo name="cerebro-main" domain="neural_simulation" warning="Task keywords ['general', 'repository', 'understanding'] not found in project symbols. Project may not contain relevant code for this task." subgraph_nodes="2" subgraph_edges="0" subgraph_density="0.0">
+  <task>general repository understanding</task>
+  <context budget="4096" used="131" remaining="3965" omitted="44">
+    <layer name="support">
+  <sym id="cerebro_unico.py::open" tier="support" kind="func" role="leaf" file="cerebro_unico.py" line="684" sig="with open(temp_path, 'w') as f:" confidence="0.6071" />
+  <sym id="asistente_cerebro.py::stdp_modulation" tier="support" kind="func" role="leaf" file="asistente_cerebro.py" line="364" sig="def stdp_modulation(self):" confidence="0.3821" />
+    </layer>
+  </context>
+  <expansion>
+    <next id="cerebro_unico.py::BrainUnico" score="0.2156" tier="support" reason="calls open"/>
+    <next id="cerebro_unico.py::write_state_json" score="0.2156" tier="support" reason="calls open"/>
+    <next id="asistente_cerebro.py::NeuromodulatorSystem" score="0.2156" tier="support" reason="calls stdp_modulation"/>
+    <next id="asistente_cerebro.py::BrainSimulation" score="0.2156" tier="support" reason="calls stdp_modulation"/>
+    <next id="asistente_cerebro.py::step" score="0.2156" tier="support" reason="calls stdp_modulation"/>
+  </expansion>
+</repo>

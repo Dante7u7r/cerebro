@@ -1,0 +1,23 @@
+# Entornos virtuales de Python (deben ser locales)
+.venv/
+venv/
+env/
+ENV/
+
+# Caché de Python (archivos temporales del sistema)
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Historial/configuraciones locales de IDEs/Asistentes
+.claude/
+.gemini/
+.idea/
+.vscode/
+
+# Directorio de datos duplicado
+IA_Viva_Arena_Darwiniana/
+
+# Ignorar archivos binarios Pickle (datos de simulación locales)
+*.pkl

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerebro Único - Spiking Neurobiológico Unificado</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <!-- Three.js y OrbitControls para el renderizado 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Chart.js para telemetría en tiempo real -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-main">
+            <span class="pulse-indicator"></span>
+            <h1>CEREBRO ÚNICO v2.0</h1>
+            <p class="tagline">Simulación Spiking Multicompartimental en Brian2</p>
+        </div>
+        <div id="sim-state-badge" class="state-badge state-awake">AWAKE</div>
+    </header>
+
+    <main class="grid-container">
+        <!-- Panel Izquierdo: Telemetría de Alta Precisión -->
+        <section class="telemetry-panel">
+            <div class="card bg-glow">
+                <h2>⚡ Estado Bioquímico (Neuromodulación)</h2>
+                <div class="chart-container">
+                    <canvas id="neuroChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card bg-glow">
+                <h2>📈 Aprendizaje y Señal Schumann</h2>
+                <div class="chart-container">
+                    <canvas id="signalChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-val" id="val-synapses">0</span>
+                    <span class="stat-lbl">Sinapsis Activas</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-val text-red" id="val-pruned">0</span>
+                    <span class="stat-lbl">Podadas</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-val text-green" id="val-created">0</span>
+                    <span class="stat-lbl">Recableadas</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-val" id="val-energy">100%</span>
+                    <span class="stat-lbl">Energía Media</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Panel Derecho: Visualizador 3D interactivo -->
+        <section class="visualizer-panel">
+            <div class="card visualizer-card">
+                <div class="card-header">
+                    <h2>🧠 Arquitectura de Red 3D en Caliente</h2>
+                    <span class="legend">Arrastra para rotar · Rueda para zoom</span>
+                </div>
+                <div id="canvas-container"></div>
+                <div class="layer-legend">
+                    <span class="legend-item"><span class="dot dot-sensory"></span>Sensorial</span>
+                    <span class="legend-item"><span class="dot dot-hidden"></span>Oculta</span>
+                    <span class="legend-item"><span class="dot dot-motor"></span>Readout/Motor</span>
+                    <span class="legend-item"><span class="dot dot-pfc"></span>PFC Supervisor</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>Tiempo de Simulación: <span id="val-time">0.0</span>s · Pasos: <span id="val-steps">0</span> · Simulación Activa en Python Backend</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

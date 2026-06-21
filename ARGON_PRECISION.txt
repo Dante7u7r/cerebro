@@ -1,0 +1,77 @@
+# repo: cerebro-main | domain: neural_simulation
+# task: unification of simulation, difference between BrainUnico and BrainBrian2
+# budget: 3000 | profile: custom
+# subgraph: 8n/4e density=0.0714
+# omitted: 180
+# modules: [check_weights]=6
+# debt: 18 markers (0 high)
+
+# --- critical (8) ---
+!run_long_simulation.py::print|cri|func|entr|0.54
+  + cerebro_unico.py::BrainUnico
+  sig: print(f"[Step {step}/1500] t={h['time']/1000:.1f}s | State: {h['state']} | "
+  code:
+              print(f"[Step {step}/1500] t={h['time']/1000:.1f}s | State: {h['state']} | "
+                    f"Active Synapses: {h['synapses']} | W_Mean: {h['w_mean']:.4f} | "
+                    f"DA: {h['da']:.2f} | Energy: {h['energy_mean']:.2%}")
+
+!run_comparison_analysis.py::run_simulation|cri|func|entr|0.77
+  > cerebro_unico.py::BrainUnico
+  + cerebro_unico.py::BrainUnico
+  sig: def run_simulation(active_regulators, steps=1000):
+  code:
+  def run_simulation(active_regulators, steps=1000): state_file = os.path.join(SCRIPT_DIR, "logs", "cerebro_unico_state.pkl") if not os.path.exists(state_file): print(f"[ERROR] No se encontró el estado base: {state_file}") sys.exit(1) print(f"\n[SIM] Inicializando cerebro para corrida (Regulación: {active_regulators})...") # Instanciar cerebro y cargar estado base brain = BrainUnico(state_path=state_file) # Configurar reguladores brain.scaler.active = active_regulators brain.gain_control.active = active_regulators # Limpiar historial de la carga para capturar solo esta corrida brain.history = [] # Correr la simulación por los pasos indicados for step_idx in range(steps): brain.step() if (step_idx + 1) % 200 == 0: print(f" Paso {step_idx + 1}/{steps} completado...") # Extraer métricas history = brain.history # Filtrar solo pasos AWAKE para calcular el MSE awake_steps = [h for h in history if h['state'] == 'AWAKE'] targets = np.array([h['target'] for h in awake_steps])
+      ...
+
+!cerebro_unico.py::BrainUnico|cri|clas|leaf|0.89
+  < run_comparison_analysis.py::run_simulation
+  sig: class BrainUnico:
+  code:
+  class BrainUnico: def __init__(self, state_path=None): self.time = 0.0 self.step_count = 0 self.brain_state = 'AWAKE' self.pruned_synapses = 0 self.created_synapses = 0 # Asignar capas, subtipos y coordenadas 3D de las neuronas self.layer_indices = np.zeros(N_TOTAL, dtype=int) self.layer_indices[N_SENSORY:N_SENSORY+N_HIDDEN] = 1 # Oculta self.layer_indices[N_SENSORY+N_HIDDEN:N_SENSORY+N_HIDDEN+N_MOTOR] = 2 # Motor/Readout self.layer_indices[N_SENSORY+N_HIDDEN+N_MOTOR:] = 3 # PFC self.neuron_types = np.ones(N_TOTAL, dtype=int) # 1 = Excitatoria, 4 = Inhibitoria # 20% de las ocultas y de PFC son inhibitorias h_idx = np.where(self.layer_indices == 1)[0] p_idx = np.where(self.layer_indices == 3)[0] self.neuron_types[h_idx[-3:]] = 4 self.neuron_types[p_idx[-2:]] = 4 # Asignar coordenadas 3D para visualización y conectividad self.x = np.random.uniform(-40, 40, N_TOTAL) self.y = np.random.uniform(-40, 40, N_TOTAL) self.z = np.zeros(N_TOTAL) self.z[self.layer_indices == 0] = 5.0 # Sensorial self.z[self.layer_indices == 1] = 25.0 #
+      ...
+
+!run_timed_simulation.py::print|cri|func|entr|0.37
+  + cerebro_unico.py::BrainUnico
+  sig: print(f"[Paso {h['step']}] | Biol: {h['time']/1000:.1f}s | Real Transcurrido: {elapsed/60:.1f} min | "
+  code:
+              print(f"[Paso {h['step']}] | Biol: {h['time']/1000:.1f}s | Real Transcurrido: {elapsed/60:.1f} min | "
+                    f"Restante: {remaining/60:.1f} min | Sinapsis: {h['synapses']} | "
+                    f"W_Mean: {h['w_mean']:.4f} | DA: {h['da']:.2f} | Frust: {cerebro.frustration:.2f} | "
+                    f"Energy: {h['energy_mean']:.2%}")
+              
+
+!semilla_cerebro.py::inhibitory_bias|cri|func|modu|0.24
+  sig: def inhibitory_bias(self): return self.D_protein / (self.M_protein + self.N_protein + 0.1)
+  code:
+      def inhibitory_bias(self): return self.D_protein / (self.M_protein + self.N_protein + 0.1)
+
+!cerebro_brian2.py::registrar_spikes|cri|func|modu|0.19
+  sig: def registrar_spikes(self):
+  code:
+      def registrar_spikes(self):
+          b = self.brain
+          for t_val, i_val in zip(b.spike_mon.t, b.spike_mon.i):
+              self._spikes.append({
+                  'time': float(t_val / ms), 'neuron_id': int(i_val),
+                  'capa': ['sensorial','oculta','motor','pfc'][int(b.neurons.layer[i_val])],
+              })
+
+!semilla_cerebro_original.py::inhibitory_bias|cri|func|modu|0.12
+  sig: def inhibitory_bias(self): return self.D_protein / (self.M_protein + self.N_protein + 0.1)
+  code:
+      def inhibitory_bias(self): return self.D_protein / (self.M_protein + self.N_protein + 0.1)
+
+!asistente_cerebro.py::NeuronSubtype|cri|clas|leaf|0.07
+  sig: class NeuronSubtype(Enum):
+  code:
+  class NeuronSubtype(Enum):
+      EXCITATORY = 1
+      INHIBITORY_PV = 2
+      INHIBITORY_SST = 3
+
+# expansion:
+#   -> cerebro_unico.py::_structural_plasticity (cri, 14.53)
+#   -> cerebro_unico.py::_get_brain_state (cri, 14.53)
+#   -> cerebro_unico.py::update (cri, 14.53)
+#   -> cerebro_unico.py::scale (cri, 14.53)
+#   -> cerebro_unico.py::adapt (cri, 14.53)

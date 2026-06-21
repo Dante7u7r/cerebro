@@ -1,0 +1,989 @@
+
+============================================================
+  EJECUTANDO EXPERIMENTO 1 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 1: Dopamina y novedad
+############################################################
+Objetivo: DA responde a novedad con spikes reales.
+
+Basal (30 pasos)
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.20s). [brian2.stateupdaters.base.method_choice]
+
+  --- basal ---
+  t=15000ms  paso=30  estado=SLOW_WAVE_SLEEP
+  Neuronas: 80  Sinapsis: 772
+  DA=0.5141  5HT=0.6180  ACh=0.3339
+  Fru=0.0000  Res=0.2000  Energia=0.912
+  w_prom=0.1453  w_max=1.0000
+  Spikes totales: 10580
+Novedad=0.1
+
+  --- nov=0.1 ---
+  t=22500ms  paso=45  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.7802  5HT=0.5336  ACh=0.7917
+  Fru=0.0000  Res=0.2000  Energia=0.884
+  w_prom=0.1637  w_max=1.0000
+  Spikes totales: 15819
+Novedad=0.3
+
+  --- nov=0.3 ---
+  t=30000ms  paso=60  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.7628  5HT=0.6348  ACh=0.8000
+  Fru=0.0000  Res=0.2000  Energia=0.861
+  w_prom=0.1753  w_max=1.0000
+  Spikes totales: 21679
+Novedad=0.5
+
+  --- nov=0.5 ---
+  t=37500ms  paso=75  estado=SLOW_WAVE_SLEEP
+  Neuronas: 80  Sinapsis: 772
+  DA=0.2879  5HT=0.5564  ACh=0.2110
+  Fru=0.0000  Res=0.2000  Energia=0.920
+  w_prom=0.1631  w_max=1.0000
+  Spikes totales: 23326
+Novedad=0.7
+
+  --- nov=0.7 ---
+  t=45000ms  paso=90  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8203  5HT=0.5770  ACh=0.7993
+  Fru=0.0000  Res=0.2000  Energia=0.933
+  w_prom=0.1661  w_max=1.0000
+  Spikes totales: 27150
+Novedad=0.9
+
+  --- nov=0.9 ---
+  t=52500ms  paso=105  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8138  5HT=0.6519  ACh=0.8000
+  Fru=0.0000  Res=0.2000  Energia=0.758
+  w_prom=0.1424  w_max=1.0000
+  Spikes totales: 38541
+Novedad=1.0
+
+  --- nov=1.0 ---
+  t=60000ms  paso=120  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.5871  5HT=0.4701  ACh=0.6992
+  Fru=0.0000  Res=0.2000  Energia=0.861
+  w_prom=0.1419  w_max=1.0000
+  Spikes totales: 38545
+Recompensa
+
+  --- recompensa ---
+  t=70000ms  paso=140  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8355  5HT=0.6341  ACh=0.8000
+  Fru=0.0000  Res=0.2500  Energia=0.754
+  w_prom=0.1752  w_max=1.0000
+  Spikes totales: 49693
+Recuperacion (40 pasos)
+
+  --- recup ---
+  t=90000ms  paso=180  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8527  5HT=0.6341  ACh=0.8000
+  Fru=0.0000  Res=0.2500  Energia=0.735
+  w_prom=0.1660  w_max=1.0000
+  Spikes totales: 60728
+
+==================================================
+  RESUMEN EXP 1
+==================================================
+  Fase                  DA   w_prom
+  -----------------------------------
+  basal             0.5141   0.1453
+  nov_0.1           0.7802   0.1637
+  nov_0.3           0.7628   0.1753
+  nov_0.5           0.2879   0.1631
+  nov_0.7           0.8203   0.1661
+  nov_0.9           0.8138   0.1424
+  nov_1.0           0.5871   0.1419
+  recompensa        0.8355   0.1752
+  recup             0.8527   0.1660
+[LOG] logs_brian2/exp1/ (1780813980_exp1_novedad_*.csv)
+      Spikes: 60728  Neuromod: 181  History: 180
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp1/cerebro_exp1.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 2 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 2: Frustracion y poda
+############################################################
+Objetivo: Frustracion crece con errores, recompensa la reduce.
+
+Basal (30 pasos)
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.30s). [brian2.stateupdaters.base.method_choice]
+
+  --- basal ---
+  t=15000ms  paso=30  estado=SLOW_WAVE_SLEEP
+  Neuronas: 80  Sinapsis: 772
+  DA=0.5141  5HT=0.6180  ACh=0.3339
+  Fru=0.0000  Res=0.2000  Energia=0.912
+  w_prom=0.1453  w_max=1.0000
+  Spikes totales: 10580
+Error 1/10
+
+  --- err_1 ---
+  t=22500ms  paso=45  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.7802  5HT=0.5336  ACh=0.7917
+  Fru=0.1600  Res=0.2000  Energia=0.884
+  w_prom=0.1637  w_max=1.0000
+  Spikes totales: 15819
+Error 2/10
+
+  --- err_2 ---
+  t=30000ms  paso=60  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.7628  5HT=0.6348  ACh=0.8000
+  Fru=0.3200  Res=0.2000  Energia=0.861
+  w_prom=0.1753  w_max=1.0000
+  Spikes totales: 21679
+Error 3/10
+
+  --- err_3 ---
+  t=37500ms  paso=75  estado=SLOW_WAVE_SLEEP
+  Neuronas: 80  Sinapsis: 772
+  DA=0.2879  5HT=0.5564  ACh=0.2110
+  Fru=0.4800  Res=0.2000  Energia=0.920
+  w_prom=0.1631  w_max=1.0000
+  Spikes totales: 23326
+Error 4/10
+
+  --- err_4 ---
+  t=45000ms  paso=90  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8203  5HT=0.5770  ACh=0.7993
+  Fru=0.6400  Res=0.2000  Energia=0.933
+  w_prom=0.1661  w_max=1.0000
+  Spikes totales: 27150
+Error 5/10
+
+  --- err_5 ---
+  t=52500ms  paso=105  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8138  5HT=0.6519  ACh=0.8000
+  Fru=0.8000  Res=0.2000  Energia=0.758
+  w_prom=0.1424  w_max=1.0000
+  Spikes totales: 38541
+Error 6/10
+
+  --- err_6 ---
+  t=60000ms  paso=120  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.5871  5HT=0.4701  ACh=0.6992
+  Fru=0.9600  Res=0.2000  Energia=0.861
+  w_prom=0.1419  w_max=1.0000
+  Spikes totales: 38545
+Error 7/10
+
+  --- err_7 ---
+  t=67500ms  paso=135  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8694  5HT=0.6100  ACh=0.7999
+  Fru=1.0000  Res=0.2000  Energia=0.835
+  w_prom=0.1674  w_max=1.0000
+  Spikes totales: 44109
+Error 8/10
+
+  --- err_8 ---
+  t=75000ms  paso=150  estado=SLOW_WAVE_SLEEP
+  Neuronas: 80  Sinapsis: 772
+  DA=0.5147  5HT=0.6135  ACh=0.3339
+  Fru=1.0000  Res=0.2000  Energia=0.819
+  w_prom=0.1667  w_max=1.0000
+  Spikes totales: 49699
+Error 9/10
+
+  --- err_9 ---
+  t=82500ms  paso=165  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.6808  5HT=0.5318  ACh=0.7917
+  Fru=1.0000  Res=0.2000  Energia=0.757
+  w_prom=0.1375  w_max=1.0000
+  Spikes totales: 55347
+Error 10/10
+
+  --- err_10 ---
+  t=90000ms  paso=180  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8527  5HT=0.6341  ACh=0.8000
+  Fru=1.0000  Res=0.2000  Energia=0.735
+  w_prom=0.1660  w_max=1.0000
+  Spikes totales: 60728
+Recompensa
+
+  --- recompensa ---
+  t=100000ms  paso=200  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.5741  5HT=0.4701  ACh=0.6992
+  Fru=0.5000  Res=0.2500  Energia=0.754
+  w_prom=0.1684  w_max=1.0000
+  Spikes totales: 66297
+Recup (40 pasos)
+
+  --- recup ---
+  t=120000ms  paso=240  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.5934  5HT=0.4701  ACh=0.6992
+  Fru=0.5000  Res=0.2500  Energia=0.768
+  w_prom=0.1869  w_max=1.0000
+  Spikes totales: 77841
+
+======================================================================
+  RESUMEN EXP 2
+======================================================================
+  Fase            N     S      DA     Fru   w_prom   Spk
+  ----------------------------------------------------------------------
+  basal          80   772  0.5141  0.0000   0.1453 10580
+  err_1          80   772  0.7802  0.1600   0.1637 15819
+  err_2          80   772  0.7628  0.3200   0.1753 21679
+  err_3          80   772  0.2879  0.4800   0.1631 23326
+  err_4          80   772  0.8203  0.6400   0.1661 27150
+  err_5          80   772  0.8138  0.8000   0.1424 38541
+  err_6          80   772  0.5871  0.9600   0.1419 38545
+  err_7          80   772  0.8694  1.0000   0.1674 44109
+  err_8          80   772  0.5147  1.0000   0.1667 49699
+  err_9          80   772  0.6808  1.0000   0.1375 55347
+  err_10         80   772  0.8527  1.0000   0.1660 60728
+  recompensa     80   772  0.5741  0.5000   0.1684 66297
+  recup          80   772  0.5934  0.5000   0.1869 77841
+[LOG] logs_brian2/exp2/ (1780814067_exp2_frustracion_*.csv)
+      Spikes: 77841  Neuromod: 241  History: 240
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp2/cerebro_exp2.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 3 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 3: Sueno REM
+############################################################
+Objetivo: Ciclo sueno-vigilia y memoria episodica.
+
+Basal (10 pasos)
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.19s). [brian2.stateupdaters.base.method_choice]
+
+  --- basal ---
+  t=5000ms  paso=10  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8265  5HT=0.5929  ACh=0.7980
+  Fru=0.0000  Res=0.2000  Energia=0.898
+  w_prom=0.1395  w_max=1.0000
+  Spikes totales: 5130
+Patron 10Hz (3 reps)
+  Rep 1/3
+  Rep 2/3
+  Rep 3/3
+
+  --- post_patron ---
+  t=27500ms  paso=55  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8515  5HT=0.6109  ACh=0.7999
+  Fru=0.0000  Res=0.2000  Energia=0.913
+  w_prom=0.1558  w_max=1.0000
+  Spikes totales: 17408
+Esperar SWS...
+
+  --- SWS ---
+  t=34500ms  paso=69  estado=SLOW_WAVE_SLEEP
+  Neuronas: 80  Sinapsis: 772
+  DA=0.5939  5HT=0.6276  ACh=0.4207
+  Fru=0.0000  Res=0.2000  Energia=0.884
+  w_prom=0.1631  w_max=1.0000
+  Spikes totales: 23326
+Esperar REM...
+
+  --- REM ---
+  t=38500ms  paso=77  estado=REM
+  Neuronas: 80  Sinapsis: 772
+  DA=0.4107  5HT=0.5028  ACh=0.5201
+  Fru=0.0000  Res=0.2000  Energia=0.932
+  w_prom=0.1631  w_max=1.0000
+  Spikes totales: 23326
+Despertar...
+
+  --- post_sueno ---
+  t=40500ms  paso=81  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.6236  5HT=0.4842  ACh=0.7389
+  Fru=0.0000  Res=0.2000  Energia=0.878
+  w_prom=0.1746  w_max=1.0000
+  Spikes totales: 26953
+Segunda exposicion
+
+  --- segunda_exp ---
+  t=45500ms  paso=91  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8542  5HT=0.5845  ACh=0.7996
+  Fru=0.0000  Res=0.2000  Energia=0.898
+  w_prom=0.1598  w_max=1.0000
+  Spikes totales: 29188
+
+============================================================
+  RESUMEN EXP 3
+============================================================
+  Fase                 DA   Buf          Estado   Spk
+  ------------------------------------------------------------
+  basal            0.8265     4           AWAKE  5130
+  post_patron      0.8515    34           AWAKE 17408
+  SWS              0.5939    46 SLOW_WAVE_SLEEP 23326
+  REM              0.4107    46             REM 23326
+  post_sueno       0.6236    46           AWAKE 26953
+  segunda_exp      0.8542    53           AWAKE 29188
+
+  Buffer episodico: 53 entradas
+[LOG] logs_brian2/exp3/ (1780814092_exp3_rem_*.csv)
+      Spikes: 29188  Neuromod: 92  History: 91
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp3/cerebro_exp3.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 4 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 4: Plasticidad STDP
+############################################################
+Objetivo: Ver pesos sinapticos cambiar con estimulacion repetida.
+
+Fase 1: Pesos iniciales
+  w_prom inicial: 0.0504
+Fase 2: Estimular par sensorial -> oculta (20 rondas)
+  Ronda 1/20
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.20s). [brian2.stateupdaters.base.method_choice]
+  Ronda 6/20
+  Ronda 11/20
+  Ronda 16/20
+
+  --- post_estimulacion ---
+  t=130000ms  paso=260  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.7343  5HT=0.6341  ACh=0.8000
+  Fru=0.0000  Res=0.2000  Energia=0.666
+  w_prom=0.1822  w_max=1.0000
+  Spikes totales: 89390
+
+  w_prom inicial: 0.0504 -> w_prom final: 0.1822
+  Cambio: 261.6%
+[LOG] logs_brian2/exp4/ (1780814152_exp4_stdp_*.csv)
+      Spikes: 89390  Neuromod: 261  History: 260
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp4/cerebro_exp4.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 5 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 5: Resiliencia al ruido
+############################################################
+Objetivo: La red mantiene actividad frente a ruido gaussiano.
+
+Fase 1: Sin ruido (20 pasos)
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.20s). [brian2.stateupdaters.base.method_choice]
+
+  --- sin_ruido ---
+  t=10000ms  paso=20  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8675  5HT=0.6427  ACh=0.8000
+  Fru=0.0000  Res=0.2000  Energia=0.920
+  w_prom=0.1378  w_max=1.0000
+  Spikes totales: 7212
+Fase 2: Con ruido sensorial (30 pasos)
+
+  --- con_ruido ---
+  t=25000ms  paso=50  estado=AWAKE
+  Neuronas: 80  Sinapsis: 772
+  DA=0.8297  5HT=0.5783  ACh=0.7993
+  Fru=0.0000  Res=0.2000  Energia=0.885
+  w_prom=0.1726  w_max=1.0000
+  Spikes totales: 18431
+Fase 3: Recuperacion (20 pasos)
+
+  --- recuperacion ---
+  t=35000ms  paso=70  estado=SLOW_WAVE_SLEEP
+  Neuronas: 80  Sinapsis: 772
+  DA=0.5068  5HT=0.6138  ACh=0.3339
+  Fru=0.0000  Res=0.2000  Energia=0.860
+  w_prom=0.1603  w_max=1.0000
+  Spikes totales: 25735
+
+  Spikes sin ruido: 7212
+  Spikes con ruido: 18431
+  Spikes recuperacion: 25735
+[LOG] logs_brian2/exp5/ (1780814172_exp5_ruido_*.csv)
+      Spikes: 25735  Neuromod: 71  History: 70
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp5/cerebro_exp5.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 6 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 6: Escalado de red
+############################################################
+Objetivo: Red ampliada (80 -> 120 neuronas) con mas conexiones.
+
+Inicializacion: 8.22s
+Total neuronas: 120
+Conexiones sinapticas: 1706
+Estimulacion (40 pasos)
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.19s). [brian2.stateupdaters.base.method_choice]
+
+  --- post_estimulacion ---
+  t=20000ms  paso=40  estado=AWAKE
+  Neuronas: 120  Sinapsis: 1706
+  DA=0.5852  5HT=0.4725  ACh=0.6992
+  Fru=0.0000  Res=0.2000  Energia=0.972
+  w_prom=0.1514  w_max=1.0000
+  Spikes totales: 17432
+
+  Tiempo de simulacion: 8.98s
+  Spikes totales: 17432
+  Sinapsis: 1706
+[LOG] logs_brian2/exp6/ (1780814191_exp6_escalado_*.csv)
+      Spikes: 17432  Neuromod: 41  History: 40
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp6/cerebro_exp6.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 7 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 7: Aprendizaje de secuencia temporal
+############################################################
+Objetivo: La red aprende que A->B->C es distinto de C->A->B.
+
+Fase 1: Entrenar secuencia A->B->C (10 repeticiones)
+  Entrenamiento 1/10
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.19s). [brian2.stateupdaters.base.method_choice]
+  Entrenamiento 4/10
+  Entrenamiento 7/10
+  Entrenamiento 10/10
+  w_prom post-entrenamiento: 0.1916  DA=0.8295
+
+Fase 2: Medir respuesta a A->B->C (secuencia aprendida)
+  Spikes en A->B->C: 12687
+
+Fase 3: Medir respuesta a C->A->B (secuencia invertida)
+  Spikes en C->A->B: 18654
+
+  Diferencia (aprendizaje de orden): 12687 vs 18654
+  Ratio sec. aprendida / invertida: 0.68x
+  >> La red prefiere la secuencia INVERSA! (inesperado)
+[LOG] logs_brian2/exp7/ (1780814244_exp7_secuencia_*.csv)
+      Spikes: 84866  Neuromod: 225  History: 224
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp7/cerebro_exp7.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 8 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 8: Privacion de sue�o
+############################################################
+Objetivo: Comparar consolidacion con vs sin sueno.
+
+=== CONDICION 1: Ciclo normal con sueno ===
+Entrenamiento (5 patrones)
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.19s). [brian2.stateupdaters.base.method_choice]
+  w_prom pre-sueno: 0.1558  DA=0.8515
+Dejar dormir (50 pasos, cubre ciclos completos)
+  w_prom post-sueno: 0.1424  Buffer=67  Spikes=38541
+
+=== CONDICION 2: Privado de sueno (AWAKE forzado) ===
+Entrenamiento (5 patrones identicos)
+  w_prom pre-forzado: 0.1671  DA=0.8580
+Forzar AWAKE (50 pasos sin dormir)
+  w_prom post-forzado: 0.1412  Buffer=99  Spikes=50910
+
+============================================================
+  COMPARATIVA: Sueno vs Insomnio
+============================================================
+  Metrica                         Con sueno       Sin sueno
+  -------------------------------------------------------
+  Delta w_prom                      -0.0135         -0.0259
+  Buffer episodico                       67              99
+  DA final                           0.8138          0.8191
+  Energia final                       0.758           0.511
+
+  >> El sue�o MEJORA la consolidacion de pesos (+-0.0135 vs +-0.0259)
+[LOG] logs_brian2/exp8_normal/ (1780814297_exp8_normal_*.csv)
+      Spikes: 38541  Neuromod: 105  History: 105
+[LOG] logs_brian2/exp8_insomnio/ (1780814298_exp8_insomnio_*.csv)
+      Spikes: 50910  Neuromod: 105  History: 105
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp8/cerebro_exp8_normal.pkl
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp8/cerebro_exp8_insomnio.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 9 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 9: Modulacion emocional de memoria
+############################################################
+Objetivo: Frustracion vs recompensa afectan la consolidacion.
+
+=== CONDICION 1: Aprendizaje CON frustracion ===
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.20s). [brian2.stateupdaters.base.method_choice]
+  Post-aprendizaje: w=0.1753  DA=0.8775  Fru=0.8000
+  Dejar dormir (30 pasos)
+  Post-sueno: w=0.1721  Delta=-0.0032  Buffer=56
+
+=== CONDICION 2: Aprendizaje CON recompensa ===
+  Post-aprendizaje: w=0.1698  DA=0.8776  Fru=0.0000
+  Dejar dormir (30 pasos)
+  Post-sueno: w=0.1588  Delta=-0.0110  Buffer=56
+
+============================================================
+  COMPARATIVA: Frustracion vs Recompensa
+============================================================
+  Metrica                       Frustracion      Recompensa
+  -------------------------------------------------------
+  DA pre-sueno                       0.8775          0.8776
+  Delta w_prom                      -0.0032         -0.0110
+  Buffer episodico                       56              56
+
+  >> La RECOMPENSA genera mayor consolidacion (emocion positiva -> mejor memoria)
+[LOG] logs_brian2/exp9_fru/ (1780814346_exp9_frustracion_*.csv)
+      Spikes: 32566  Neuromod: 94  History: 94
+[LOG] logs_brian2/exp9_rec/ (1780814347_exp9_recompensa_*.csv)
+      Spikes: 32598  Neuromod: 94  History: 94
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp9/cerebro_exp9_frustracion.pkl
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp9/cerebro_exp9_recompensa.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 10 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 10: Periodo critico de plasticidad
+############################################################
+Objetivo: La plasticidad es mayor en etapas tempranas.
+
+Fase 1: Estimulacion temprana (20 pasos)
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.19s). [brian2.stateupdaters.base.method_choice]
+  w_inicial=0.0504  w_final_temprano=0.1753
+  Delta temprano: +0.1249
+  Cambio promedio por paso: 0.006578
+  Spikes fase temprana: 21679
+
+Fase 2: Avanzar a periodo tardio (hasta paso 200 con silencio)
+Fase 2: Estimulacion tardia (20 pasos)
+  w_inicial_tardio=0.1684  w_final_tardio=0.1822
+  Delta tardio: +0.0138
+  Cambio promedio por paso: 0.002891
+  Spikes fase tardia: 67711
+
+============================================================
+  COMPARATIVA: Periodo temprano vs tardio
+============================================================
+  Metrica                            Temprano       Tardio
+  -------------------------------------------------------
+  Delta total                         +0.1249      +0.0138
+  Cambio medio/paso                  0.006578     0.002891
+
+  >> Existe PERIODO CRITICO: la plasticidad temprana es mayor!
+[LOG] logs_brian2/exp10/ (1780814407_exp10_critico_*.csv)
+      Spikes: 89390  Neuromod: 261  History: 260
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp10/cerebro_exp10.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 11 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 11: Incertidumbre y prediccion
+############################################################
+Objetivo: La DA refleja error de prediccion bajo ruido sensorial.
+Hipotesis: A mayor ruido, mayor error de prediccion, mayor DA.
+
+Fase 1: Estabilizar DA basal (20 pasos AWAKE forzado)
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.19s). [brian2.stateupdaters.base.method_choice]
+  DA basal estabilizada: 0.8675  Spikes: 7212
+
+Fase 2: Medir DA bajo niveles de ruido creciente
+  Ruido=   0  DA=0.8403  Spikes=4751  Rate=15.0Hz +/-25.6
+  Ruido=   2  DA=0.7667  Spikes=1642  Rate=5.2Hz +/-13.0
+  Ruido=   4  DA=0.7443  Spikes= 651  Rate=2.2Hz +/-4.1
+  Ruido=   6  DA=0.7891  Spikes=3291  Rate=10.4Hz +/-20.1
+  Ruido=   8  DA=0.8196  Spikes=7335  Rate=22.8Hz +/-29.5
+  Ruido=  10  DA=0.8617  Spikes=9039  Rate=28.5Hz +/-28.8
+  Ruido=  12  DA=0.8934  Spikes=10369  Rate=32.5Hz +/-25.9
+  Ruido=  14  DA=0.8306  Spikes=11229  Rate=35.2Hz +/-25.7
+
+Fase 3: Recuperacion post-ruido (10 pasos sin ruido)
+
+=================================================================
+  RESULTADOS: Dopamina como se�al de incertidumbre
+=================================================================
+   Ruido       DA  Spikes  Rate u  Rate s  Energia
+  -------------------------------------------------------
+     0.0   0.8403    4751    15.0    25.6    0.804
+     2.0   0.7667    1642     5.2    13.0    0.696
+     4.0   0.7443     651     2.2     4.1    0.606
+     6.0   0.7891    3291    10.4    20.1    0.524
+     8.0   0.8196    7335    22.8    29.5    0.460
+    10.0   0.8617    9039    28.5    28.8    0.434
+    12.0   0.8934   10369    32.5    25.9    0.429
+    14.0   0.8306   11229    35.2    25.7    0.428
+
+  Correlaciones (Pearson):
+    DA vs Ruido       : +0.559
+    DA vs Var. Rate   : +0.836
+    Spikes vs Ruido   : +0.854
+
+  DA basal: 0.8675  DA max: 0.8934  DA recuperacion: 0.8739
+
+  --- Interpretacion ---
+  DA CORRELACIONA FUERTEMENTE con ruido (r=0.56).
+  La red usa dopamina como se�al de incertidumbre: a mas ruido, mas DA.
+  Los spikes AUMENTAN con ruido (r=0.85) � respuesta sensorial intacta.
+[LOG] logs_brian2/exp11/ (1780814442_exp11_incertidumbre_*.csv)
+      Spikes: 96314  Neuromod: 134  History: 134
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp11/cerebro_exp11.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 12 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 12: Selectividad a estimulos
+############################################################
+Pregunta: �STDP no supervisado genera preferencia por estimulo entrenado?
+(Topologia por capas, drive=0 durante test, sin saturacion previa)
+
+
+=== Semilla 42 ===
+  Reposo (5 pasos, I_ext=0)
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.19s). [brian2.stateupdaters.base.method_choice]
+    Sinapsis: 772  w_prom: 0.0504
+  Entrenamiento A (neurona 0, 30 rondas, drive=10)
+    w_post_entrenamiento: 0.1242 (x2.5)
+  Test (drive tonico=9, los pesos mandan)
+    A=1776+/-14  B=1112+/-0  d=+664
+[LOG] logs_brian2/exp12_STDP_s42/ (1780814506_exp12_STDP_s42_*.csv)
+      Spikes: 31640  Neuromod: 281  History: 281
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp12_STDP_s42/cerebro.pkl
+  Control (plasticidad OFF)
+    Sinapsis: 783  w_prom: 0.0509
+    A=1117+/-2  B=1112+/-0  d=+5
+[LOG] logs_brian2/exp12_CTRL_s42/ (1780814568_exp12_CTRL_s42_*.csv)
+      Spikes: 22539  Neuromod: 281  History: 281
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp12_CTRL_s42/cerebro.pkl
+
+=== Semilla 123 ===
+  Reposo (5 pasos, I_ext=0)
+    Sinapsis: 807  w_prom: 0.0506
+  Entrenamiento A (neurona 0, 30 rondas, drive=10)
+    w_post_entrenamiento: 0.1330 (x2.6)
+  Test (drive tonico=9, los pesos mandan)
+    A=2746+/-29  B=1181+/-5  d=+1565
+[LOG] logs_brian2/exp12_STDP_s123/ (1780814631_exp12_STDP_s123_*.csv)
+      Spikes: 36654  Neuromod: 281  History: 281
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp12_STDP_s123/cerebro.pkl
+  Control (plasticidad OFF)
+    Sinapsis: 731  w_prom: 0.0511
+    A=1117+/-2  B=1115+/-1  d=+3
+[LOG] logs_brian2/exp12_CTRL_s123/ (1780814694_exp12_CTRL_s123_*.csv)
+      Spikes: 22166  Neuromod: 281  History: 281
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp12_CTRL_s123/cerebro.pkl
+
+=== Semilla 456 ===
+  Reposo (5 pasos, I_ext=0)
+    Sinapsis: 773  w_prom: 0.0502
+  Entrenamiento A (neurona 0, 30 rondas, drive=10)
+    w_post_entrenamiento: 0.1152 (x2.3)
+  Test (drive tonico=9, los pesos mandan)
+    A=2651+/-13  B=1116+/-0  d=+1535
+[LOG] logs_brian2/exp12_STDP_s456/ (1780814757_exp12_STDP_s456_*.csv)
+      Spikes: 35252  Neuromod: 281  History: 281
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp12_STDP_s456/cerebro.pkl
+  Control (plasticidad OFF)
+    Sinapsis: 802  w_prom: 0.0492
+    A=1113+/-3  B=1112+/-0  d=+1
+[LOG] logs_brian2/exp12_CTRL_s456/ (1780814820_exp12_CTRL_s456_*.csv)
+      Spikes: 22276  Neuromod: 281  History: 281
+[SAVE] Cerebro Brian2 guardado en logs_brian2/exp12_CTRL_s456/cerebro.pkl
+
+======================================================================
+  RESULTADOS
+======================================================================
+
+   Seed  Cond   Syn        A        B        d   w_pre  w_post
+  --------------------------------------------------------------
+     42  STDP   772   1775.7   1111.7   +664.0  0.0504  0.1242
+     42  CTRL   783   1117.0   1112.3     +4.7  0.0509  0.0509
+    123  STDP   807   2746.3   1181.3  +1565.0  0.0506  0.1330
+    123  CTRL   731   1117.3   1114.7     +2.7  0.0511  0.0511
+    456  STDP   773   2651.0   1115.7  +1535.3  0.0502  0.1152
+    456  CTRL   802   1113.3   1112.0     +1.3  0.0492  0.0492
+
+  d(A-B) STDP: +1254.8+/-417.9  CTRL: +2.9+/-1.4
+  w_post/w_pre STDP: 2.5x  CTRL: 1.0x
+
+  --- CONCLUSION ---
+  H1 SOPORTADA: Selectividad emergente detectada.
+  STDP: d(A-B) = +1255 +/- 418 spikes
+  CTRL: d(A-B) = +3 +/- 1 spikes
+  El estimulo entrenado (A) produce 434x mas respuesta.
+  La red desarrollo preferencia medible por la via entrenada.
+  La variacion entre seeds (664-1565) refleja
+  diferencias en el cableado aleatorio inicial.
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 13 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 13: Torneo de cerebros
+############################################################
+3 cerebros STDP compiten. El de mayor selectividad sobrevive.
+Rondas: selectividad pura -> reentrenamiento -> presion de ruido
+
+============================================================
+  RONDA 1 � Selectividad pura (entrenar 30 rondas, test A vs B)
+============================================================
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.20s). [brian2.stateupdaters.base.method_choice]
+  Alfa (s101): w 0.051->0.160  A=3208 B=1740  d=+1469
+  Beta (s102): w 0.052->0.139  A=2775 B=2422  d=+353
+  Gamma (s103): w 0.052->0.155  A=3045 B=1247  d=+1798
+  CTRL (s201): w 0.050->0.050  A=1109 B=1115  d=-6
+
+  ELIMINADO R1: Beta (d=+353)
+
+============================================================
+  RONDA 2 � Re-entrenamiento (+20 rondas)
+============================================================
+  Alfa: w 0.187->0.173  A=3316 B=1591  d=+1725
+  Gamma: w 0.187->0.154  A=2734 B=1216  d=+1518
+
+  ELIMINADO R2: Gamma (d=+1518)
+
+============================================================
+  RONDA 3 � Bajo presion (ruido creciente)
+============================================================
+   Ruido  Campeon d     CTRL d
+  ------------------------------
+       0      +2074         -4
+       2        +37        -90
+       4       -202        +50
+       6       +467       +123
+
+  CAMPEON: Alfa (s101)
+  Selectividad final: d=+1758 spikes
+  Pesos finales: 0.2059
+  >> Torneo VALIDO: el campeon discrimina claramente.
+[SAVE] Cerebro Brian2 guardado en cerebro_campeon.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 14 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 14: Aprendizaje secuencial (A luego B)
+############################################################
+Pregunta: Si Beta ya sabe A, �entrenar B interfiere con A?
+Depende de la topologia de Beta (s102) � no esta programado.
+
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.20s). [brian2.stateupdaters.base.method_choice]
+  Topologia Beta: 795/795/795 conexiones S0/S2/S4 -> oculta
+  Pesos iniciales S0: 0.2500  S2: 0.2500  S4: 0.2500
+
+  --- FASE 1: Entrenar A (neurona 0, 50 rondas) ---
+  w_prom global: 0.1478
+  w S0: 0.8749  w S2: 0.8749  (S2 NO fue entrenada)
+  Pre-B :  A=2954  B=2448  C=2465  d(A,B)=+506  d(A,C)=+489
+
+  --- FASE 2: Entrenar B (neurona 2, 30 rondas) ---
+  w_prom global: 0.1754
+  w S0: 0.0371  w S2: 0.0359  w S4: 0.0322
+  Post-B:  A=1229  B=3134  C=2528  d(A,B)=-1905  d(A,C)=-1299
+
+============================================================
+  RESULTADOS: Interferencia o independencia
+============================================================
+  Metrica                        Pre-B     Post-B     Cambio
+  -------------------------------------------------------
+  Respuesta a A                   2954       1229      -1725
+  Respuesta a B                   2448       3134       +686
+  Respuesta a C (ctrl)            2465       2528        +63
+  d(A,B) selectividad             +506      -1905      -2411
+  w S0 (via entrenada A)        0.8749     0.0371    -0.8378
+  w S2 (via entrenada B)        0.8749     0.0359    -0.8390
+
+  --- CONCLUSION ---
+  INTERFERENCIA: entrenar B DA�O la memoria de A (d_selectividad=-2411).
+  Las vias de A y B comparten suficientes sinapsis para que B pise a A.
+  La respuesta a C cambio +63 � posible efecto colateral global.
+[SAVE] Cerebro Brian2 guardado en cerebro_secuencial.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+
+============================================================
+  EJECUTANDO EXPERIMENTO 15 EN PROCESO INDEPENDIENTE
+============================================================
+
+
+############################################################
+  EXPERIMENTO 15: El misterio de la neurona C
+############################################################
+Pregunta: �Por que una neurona NO entrenada (C) aumento su respuesta
+cuando se entreno B? Esto contradice la prediccion de LTD global.
+
+INFO       No numerical integration method specified for group 'synapses', using method 'exact' (took 0.42s). [brian2.stateupdaters.base.method_choice]
+Fase 0: Pesos iniciales (sin entrenamiento)
+  S0: 10 syn, w=0.0922+/-0.0852 [0.0094-0.2500]
+  S2: 9 syn, w=0.0620+/-0.0245 [0.0006-0.0829]
+  S4: 6 syn, w=0.0483+/-0.0282 [0.0108-0.0863]
+  Baseline: A=1118 B=1113 C=1113 d(A,B)=+5 d(A,C)=+5
+
+Fase 1: Analisis de timing de disparo (1 paso con drive=10, sin input)
+  Neurona S0: 0 spikes
+  Neurona S2: 0 spikes
+  Neurona S4: 0 spikes
+
+Fase 2: Entrenar SOLO B (neurona 2, 30 rondas)
+  Pesos post-entrenamiento B:
+  S0: w=0.1094+/-0.2972  (d=+0.0173)
+  S2: w=0.7588+/-0.2688  (d=+0.6968)
+  S4: w=0.0071+/-0.0158  (d=-0.0412)
+  Post-B  : A=1283 B=2570 C=1113 d(A,B)=-1287 d(A,C)=+171
+
+============================================================
+  RESULTADOS: �Por que C subio?
+============================================================
+   Neurona   Baseline     Post-B          d         dw
+  --------------------------------------------------
+    A (S0)       1118       1283       +165    +0.0173
+    B (S2)       1113       2570      +1457    +0.6968
+    C (S4)       1113       1113         -0    -0.0412
+
+  --- CONCLUSION ---
+  C (S4) perdio peso (-0.0412) como esperado. El aumento en respuesta
+  comportamental (+-0) NO viene de cambio de pesos sino de otra causa.
+  Posible: cambio en la excitabilidad de las neuronas post-sinapticas.
+[SAVE] Cerebro Brian2 guardado en cerebro_exp15.pkl
+  Revisa logs_brian2/ para los CSV.
+============================================================
+======================================================================
+  IA VIVA - SEQUENTIAL EXPERIMENT RUNNER (1-15)
+======================================================================
+Using interpreter: C:\Users\maruc\Proyectos\trabajando\cerebro-main\.venv\Scripts\python.exe
+Working directory: C:\Users\maruc\Proyectos\trabajando\cerebro-main
+----------------------------------------------------------------------
+
+>>> Starting Experiment 1/15...
+>>> Experiment 1 completed successfully in 44.25 seconds.
+
+>>> Starting Experiment 2/15...
+>>> Experiment 2 completed successfully in 86.67 seconds.
+
+>>> Starting Experiment 3/15...
+>>> Experiment 3 completed successfully in 25.01 seconds.
+
+>>> Starting Experiment 4/15...
+>>> Experiment 4 completed successfully in 60.17 seconds.
+
+>>> Starting Experiment 5/15...
+>>> Experiment 5 completed successfully in 20.43 seconds.
+
+>>> Starting Experiment 6/15...
+>>> Experiment 6 completed successfully in 19.09 seconds.
+
+>>> Starting Experiment 7/15...
+>>> Experiment 7 completed successfully in 52.76 seconds.
+
+>>> Starting Experiment 8/15...
+>>> Experiment 8 completed successfully in 53.66 seconds.
+
+>>> Starting Experiment 9/15...
+>>> Experiment 9 completed successfully in 48.84 seconds.
+
+>>> Starting Experiment 10/15...
+>>> Experiment 10 completed successfully in 60.53 seconds.
+
+>>> Starting Experiment 11/15...
+>>> Experiment 11 completed successfully in 35.29 seconds.
+
+>>> Starting Experiment 12/15...
+>>> Experiment 12 completed successfully in 377.46 seconds.
+
+>>> Starting Experiment 13/15...
+>>> Experiment 13 completed successfully in 494.20 seconds.
+
+>>> Starting Experiment 14/15...
+>>> Experiment 14 completed successfully in 261.12 seconds.
+
+>>> Starting Experiment 15/15...
+>>> Experiment 15 completed successfully in 141.23 seconds.
+
+======================================================================
+  SIMULATION RUN SUMMARY
+======================================================================
+Exp #   | Status     | Time (s)  
+----------------------------------------------------------------------
+Exp 1   | SUCCESS    | 44.25     
+Exp 2   | SUCCESS    | 86.67     
+Exp 3   | SUCCESS    | 25.01     
+Exp 4   | SUCCESS    | 60.17     
+Exp 5   | SUCCESS    | 20.43     
+Exp 6   | SUCCESS    | 19.09     
+Exp 7   | SUCCESS    | 52.76     
+Exp 8   | SUCCESS    | 53.66     
+Exp 9   | SUCCESS    | 48.84     
+Exp 10  | SUCCESS    | 60.53     
+Exp 11  | SUCCESS    | 35.29     
+Exp 12  | SUCCESS    | 377.46    
+Exp 13  | SUCCESS    | 494.20    
+Exp 14  | SUCCESS    | 261.12    
+Exp 15  | SUCCESS    | 141.23    
+----------------------------------------------------------------------
+Total Suite Execution Time: 29.68 minutes (1780.72 seconds)
+All experiments completed successfully!
