@@ -184,6 +184,134 @@ class GainController:
 
 
 # ============================================================================
+# CLASE DEL ESPACIO DE TRABAJO GLOBAL (CONSCIENCIA)
+# ============================================================================
+class EspacioGlobal:
+    """Workspace + detector de igniciones.
+    Integrador de la teoría de Baars/Dehaene para Spiking Neurons de Brian2.
+    """
+    PESOS_REGIONES = {
+        3: 4.0,   # PFC: Z=65
+        2: 3.0,   # Motor: Z=45
+        1: 1.5,   # Oculta: Z=25
+        0: 0.2,   # Sensorial: Z=5 (señal de fondo)
+    }
+
+    def __init__(self, umbral_inicial=30.0, ventana_adaptacion=100, ganancia_broadcast=0.18):
+        self.umbral = umbral_inicial
+        self.ventana = ventana_adaptacion
+        self.ganancia_broadcast = ganancia_broadcast
+        self._fr_workspace_history = []
+        self._steps_sobre_umbral = 0
+        self._ignicion_activa = False
+
+    def _adaptar_umbral(self):
+        if len(self._fr_workspace_history) < self.ventana:
+            return
+        recientes = sorted(self._fr_workspace_history[-self.ventana:])
+        idx = int(0.90 * len(recientes))
+        nuevo_umbral = recientes[idx]
+        self.umbral = 0.95 * self.umbral + 0.05 * nuevo_umbral
+
+    def tick(self, brain, firing_rates):
+        # Calcular firing rate ponderado por región
+        actividad_ponderada = 0.0
+        peso_total = 0.0
+        for layer_id in range(4):
+            mask = brain.layer_indices == layer_id
+            if not np.any(mask):
+                continue
+            fr_layer = firing_rates[mask]
+            avg_fr = np.mean(fr_layer)
+            peso = self.PESOS_REGIONES.get(layer_id, 0.1)
+            actividad_ponderada += peso * avg_fr
+            peso_total += peso
+
+        if peso_total > 0:
+            actividad_ponderada /= peso_total
+
+        self._fr_workspace_history.append(actividad_ponderada)
+        if len(self._fr_workspace_history) > self.ventana * 2:
+            self._fr_workspace_history = self._fr_workspace_history[-self.ventana * 2:]
+        self._adaptar_umbral()
+
+        evento_nuevo = False
+        if actividad_ponderada > self.umbral:
+            self._steps_sobre_umbral += 1
+            if self._steps_sobre_umbral >= 2:
+                self._ignicion_activa = True
+                evento_nuevo = True
+        else:
+            self._ignicion_activa = False
+            self._steps_sobre_umbral = 0
+
+        return actividad_ponderada, self._ignicion_activa
+
+
+# ============================================================================
+# CLASE DEL ENTORNO VIRTUAL 2D (LA ARENA)
+# ============================================================================
+class Entorno2D:
+    """Modelador del plano continuo y física simple de movimiento para el agente.
+    Mantiene la posición del agente, orientación y la comida.
+    """
+    def __init__(self, limite=40.0):
+        self.limite = limite
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0  # Orientación en radianes
+        self.x_comida = np.random.uniform(-self.limite * 0.7, self.limite * 0.7)
+        self.y_comida = np.random.uniform(-self.limite * 0.7, self.limite * 0.7)
+        self.comidas_ingeridas = 0
+
+    def reubicar_comida(self):
+        self.x_comida = np.random.uniform(-self.limite * 0.7, self.limite * 0.7)
+        self.y_comida = np.random.uniform(-self.limite * 0.7, self.limite * 0.7)
+
+    def mover_agente(self, fr_izq, fr_fwd, fr_der):
+        # 1. Calcular giros (sensibilidad de giro: 0.04 radianes por Hz)
+        delta_theta = (fr_izq - fr_der) * 0.04
+        self.theta = (self.theta + delta_theta) % (2 * np.pi)
+
+        # 2. Calcular velocidad lineal (sensibilidad de velocidad: 1.5 unidades por Hz)
+        velocidad = fr_fwd * 1.5
+        
+        # 3. Actualizar coordenadas físicas
+        self.x += velocidad * np.cos(self.theta)
+        self.y += velocidad * np.sin(self.theta)
+
+        # 4. Bordes toroidales: si sale por un lado, aparece por el otro (sin esquinas muertas)
+        self.x = ((self.x + self.limite) % (2 * self.limite)) - self.limite
+        self.y = ((self.y + self.limite) % (2 * self.limite)) - self.limite
+
+    def distancia_a_comida(self):
+        """Distancia toroidal (mínima considerando wrap-around)."""
+        dx = abs(self.x - self.x_comida)
+        dy = abs(self.y - self.y_comida)
+        L = 2 * self.limite
+        dx = min(dx, L - dx)
+        dy = min(dy, L - dy)
+        return np.sqrt(dx**2 + dy**2)
+
+    def angulo_relativo_a_comida(self):
+        """Calcula el ángulo de la comida respecto a la orientación del agente.
+        Devuelve un valor entre -pi y pi. Usa camino toroidal más corto.
+        """
+        L = 2 * self.limite
+        dy = self.y_comida - self.y
+        dx = self.x_comida - self.x
+        # Camino toroidal más corto en cada eje
+        if abs(dx) > self.limite:
+            dx = dx - np.sign(dx) * L
+        if abs(dy) > self.limite:
+            dy = dy - np.sign(dy) * L
+        angulo_absoluto = np.arctan2(dy, dx)
+        diff = angulo_absoluto - self.theta
+        # Normalizar a [-pi, pi]
+        return (diff + np.pi) % (2 * np.pi) - np.pi
+
+
+# ============================================================================
 # CLASE PRINCIPAL: CEREBRO ÚNICO
 # ============================================================================
 class BrainUnico:
@@ -304,7 +432,7 @@ class BrainUnico:
         self.neurons.v_dend = -65.0 + np.random.randn(N_TOTAL) * 3.0
         self.neurons.tau_m = self.tau_m_arr
         self.neurons.tau_dend = 30.0 * ms
-        self.neurons.g_coupling = 0.15
+        self.neurons.g_coupling = 0.35
         self.neurons.E_ampa = 0.0
         self.neurons.E_gaba = -75.0
         self.neurons.da = 0.5
@@ -332,7 +460,7 @@ class BrainUnico:
         self.neurons.delta_v_thresh = delta_t_arr
         
         # Inicialización del ruido dinámico
-        self.neurons.noise_base = 2.2
+        self.neurons.noise_base = 3.5
         
         # Parámetros del Ritmo Sincrónico CPG
         self.neurons.is_sensory = (self.layer_indices == 0).astype(float)
@@ -404,10 +532,10 @@ class BrainUnico:
         self.synapses.is_excitatory = (pre_types == 1).astype(float)
         self.synapses.target_is_dendrite = (np.random.rand(len(self.synapses)) < 0.5).astype(float)
         
-        # Parámetros STP
-        self.synapses.U_stp = np.where(pre_types == 1, 0.2, 0.5)
-        self.synapses.tau_d = np.where(pre_types == 1, 200.0, 100.0) * ms
-        self.synapses.tau_f = np.where(pre_types == 1, 50.0, 150.0) * ms
+        # Parámetros STP (calibrados para propagación multicapa)
+        self.synapses.U_stp = np.where(pre_types == 1, 0.12, 0.5)
+        self.synapses.tau_d = np.where(pre_types == 1, 80.0, 100.0) * ms
+        self.synapses.tau_f = np.where(pre_types == 1, 100.0, 150.0) * ms
         self.synapses.x_stp = 1.0
         self.synapses.u_stp = self.synapses.U_stp
         
@@ -431,9 +559,9 @@ class BrainUnico:
         self.synapses.is_active = active_mask.astype(float)
         
         w_init = np.zeros(len(self.synapses))
-        w_init[active_mask] = np.random.uniform(0.35, 0.85, np.sum(active_mask))
+        w_init[active_mask] = np.random.uniform(0.8, 1.4, np.sum(active_mask))
         inh_mask = active_mask & (self.synapses.is_excitatory[:] == 0.0)
-        w_init[inh_mask] = 0.95
+        w_init[inh_mask] = 1.2
         self.synapses.w = w_init
         
         # Mielinización inicial
@@ -463,6 +591,9 @@ class BrainUnico:
         # Inicialización de módulos de regulación biológica
         self.scaler = SynapticScaler(target_sum_w=6.0, active=True)
         self.gain_control = GainController(target_rate=8.0, alpha_gain=0.05, active=True)
+        self.workspace = EspacioGlobal()
+        self.decay_factor = 0.985  # Decaimiento pasivo de sinapsis por ciclo homeostático (calibrado)
+        self.entorno = Entorno2D()  # Entorno 2D en lazo cerrado (volante y llantas)
         
         if state_path is not None and os.path.exists(state_path):
             self.load_state(state_path)
@@ -507,8 +638,9 @@ class BrainUnico:
         # Escalar inhibitorias
         w_new[~is_exc] *= syn_scales_inh[~is_exc]
         
-        # Conservar el límite máximo wmax = 2.0
-        self.synapses.w = np.clip(w_new, 0.0, 2.0)
+        # Conservar el límite máximo wmax = 2.0 y aplicar decaimiento pasivo (decay) por desuso
+        # Esto previene la rigidez de pesos permitiendo que las sinapsis inactivas decaigan lentamente y sean podadas.
+        self.synapses.w = np.clip(w_new * self.decay_factor, 0.0, 2.0)
         
         # Escalado sináptico descentralizado adicional (capa de regulación glial)
         if hasattr(self, 'scaler') and self.scaler.active:
@@ -575,6 +707,9 @@ class BrainUnico:
         self.step_count += 1
         self.brain_state = self._get_brain_state()
         
+        # 1. Espacio de Trabajo Global: Calcular ignición basada en disparo del step previo
+        fr_workspace, ignicion = self.workspace.tick(self, self.neurons.firing_rate[:] / Hz)
+        
         # Sincronizar neuromodulación a Brian2
         self.neurons.da = self.neuromod.dopamine
         self.neurons.ser = self.neuromod.serotonin
@@ -590,38 +725,96 @@ class BrainUnico:
         error = 0.0
         
         if self.brain_state == 'AWAKE':
-            target_signal = np.sin(2 * np.pi * self.time / SIGNAL_PERIOD)
+            # Reactivar oscilador de fondo (CPG de Schumann) en vigilia
+            self.neurons.cpg_amplitude = 2.5
             
-            # Estimulación en los primeros 5 canales
+            # 2. Bucle Cerrado: Calcular distancia y colisión con comida
+            dist = self.entorno.distancia_a_comida()
+            if dist < 5.0:
+                self.entorno.comidas_ingeridas += 1
+                self.neuromod.dopamine = 1.0
+                self.frustration = 0.0
+                # Alimentar metabolismo
+                self.neurons.energy = np.clip(self.neurons.energy[:] + 0.30, 0.0, 1.0)
+                self.entorno.reubicar_comida()
+                print(f"[COMIDA] ¡Agente comió! Total comidas: {self.entorno.comidas_ingeridas} | t={self.time/1000:.1f}s")
+                dist = self.entorno.distancia_a_comida()
+                
+            # Codificar visualmente la posición de la comida (neuronas sensoriales 0 a 4)
+            # Campo visual panorámico de 360° dividido en 5 sectores de 72° cada uno
+            # Sector 0: extrema izquierda, Sector 2: frente, Sector 4: extrema derecha
             sensory_pulse = np.zeros(N_SENSORY)
-            sensory_pulse[0:5] = 45.0 * (target_signal > 0.0)
-            sensory_pulse += np.random.uniform(0.0, 5.0, N_SENSORY)
+            ang_rel = self.entorno.angulo_relativo_a_comida()  # [-pi, pi]
+            
+            # Mapear ángulo relativo [-pi, pi] a sector [0, 4]
+            # ang_rel=0 (frente) → sector 2; ang_rel=-pi (atrás izq) → sector 0
+            sector_float = (ang_rel + np.pi) / (2 * np.pi) * 5.0
+            sector_idx = int(np.clip(sector_float, 0, 4.999))
+            intensity = 45.0 * max(0.0, 1.0 - dist / 40.0)
+            sensory_pulse[sector_idx] = intensity
+                
+            # Codificar propiocepción de hambre (neuronas sensoriales 5 a 9)
+            mean_energy = np.mean(self.neurons.energy[:])
+            sensory_pulse[5:10] = 30.0 * (1.0 - mean_energy)
+            
+            # Añadir un mínimo ruido dinámico sensorial
+            sensory_pulse += np.random.uniform(0.0, 2.0, N_SENSORY)
             self.neurons.I_ext[:N_SENSORY] = sensory_pulse
+            
+            target_signal = np.sin(2 * np.pi * self.time / SIGNAL_PERIOD)
             
             if self.neuromod.dopamine > 0.65:
                 self._episodic_buffer.append({
                     'sensory': sensory_pulse.copy(),
                     'time': self.time
                 })
+            
+            # Broadcast Consciente: Inyectar corriente amplificada a regiones cognitivas y motoras
+            if ignicion:
+                exceso = max(0.0, (fr_workspace - self.workspace.umbral) / max(1.0, self.workspace.umbral))
+                ganancia = self.workspace.ganancia_broadcast * (1.0 + exceso)
+                broadcast_mask = (self.layer_indices == 1) | (self.layer_indices == 2) | (self.layer_indices == 3)
+                currents = self.neurons.I_ext[:]
+                currents[broadcast_mask] += ganancia * 3.5 * (self.neurons.firing_rate[broadcast_mask] / (100.0 * Hz))
+                self.neurons.I_ext = currents
                 
+        elif self.brain_state == 'SLOW_WAVE_SLEEP':
+            # Mantener Schumann débil en SWS
+            self.neurons.cpg_amplitude = 1.0
+            
         elif self.brain_state == 'REM':
+            # Desacoplamiento sensorial y de CPG en sueño REM para enfocar la consolidación
+            self.neurons.cpg_amplitude = 0.0
             self._sleep_replay()
             
         # Ejecutar simulación Brian2 por 500 ms
         self.network.run(BATCH_MS * ms, report=None)
         
-        # Obtener tasas de disparo medias en los últimos 200 ms
-        t_sec = self.time * 0.001
-        spike_t = np.asarray(self.spike_mon.t)
+        # Obtener tasas de disparo en la ventana del batch completo (500 ms)
+        # IMPORTANTE: Usar el reloj de Brian2 (defaultclock.t) como referencia temporal,
+        # NO self.time, porque self.time es acumulativo histórico del pickle mientras que
+        # los timestamps de spike_mon.t usan el reloj de Brian2 que empieza en 0 cada ejecución.
+        t_brian = float(defaultclock.t / second)
+        batch_window = BATCH_MS * 0.001  # 0.5 segundos
+        spike_t = np.asarray(self.spike_mon.t / second)  # Convertir de Quantity Brian2 a float puro (segundos)
         spike_i = np.asarray(self.spike_mon.i)
         
-        window_start = t_sec - 0.2
-        recent_mask = (spike_t > window_start) & (spike_t <= t_sec)
+        window_start = t_brian - batch_window
+        recent_mask = (spike_t > window_start) & (spike_t <= t_brian)
         recent_spikes_i = spike_i[recent_mask]
         
         for i in range(N_TOTAL):
             count = np.sum(recent_spikes_i == i)
-            self.neurons.firing_rate[i] = (count / 0.2) * Hz
+            self.neurons.firing_rate[i] = (count / batch_window) * Hz
+        
+        # 3. Traducir disparo de las 15 neuronas motoras (índices 25 a 39) en movimiento
+        rates = self.neurons.firing_rate[:] / Hz
+        fr_izq = np.mean(rates[25:30])
+        fr_fwd = np.mean(rates[30:35])
+        fr_der = np.mean(rates[35:40])
+        
+        # Mover al agente en la arena
+        self.entorno.mover_agente(fr_izq, fr_fwd, fr_der)
             
         # Calcular error de predicción en base a la capa motora (Z: 45)
         motor_firing = float(np.mean(self.neurons.firing_rate[self.layer_indices == 2] / Hz))
@@ -690,7 +883,10 @@ class BrainUnico:
             'pruned': self.pruned_synapses,
             'created': self.created_synapses,
             'prediction': prediction,
-            'target': target_signal
+            'target': target_signal,
+            'workspace_fr': float(fr_workspace),
+            'workspace_umbral': float(self.workspace.umbral),
+            'ignicion': bool(ignicion)
         })
         
         if len(self.history) > 1000:
@@ -749,6 +945,15 @@ class BrainUnico:
             'energy_mean': float(np.mean(energies)),
             'prediction': float(self.history[-1]['prediction']) if len(self.history) > 0 else 0.0,
             'target': float(self.history[-1]['target']) if len(self.history) > 0 else 0.0,
+            'workspace_fr': float(self.history[-1]['workspace_fr']) if len(self.history) > 0 else 0.0,
+            'workspace_umbral': float(self.workspace.umbral),
+            'ignicion': bool(self.workspace._ignicion_activa),
+            'agent_x': float(self.entorno.x),
+            'agent_y': float(self.entorno.y),
+            'agent_theta': float(self.entorno.theta),
+            'food_x': float(self.entorno.x_comida),
+            'food_y': float(self.entorno.y_comida),
+            'meals_eaten': int(self.entorno.comidas_ingeridas),
             'neurons': neuron_list,
             'synapses': syn_list
         }
@@ -810,7 +1015,15 @@ class BrainUnico:
             'gain_control_active': self.gain_control.active if hasattr(self, 'gain_control') else False,
             'gain_control_target_rate': self.gain_control.target_rate if hasattr(self, 'gain_control') else 8.0,
             'gain_control_alpha_gain': self.gain_control.alpha_gain if hasattr(self, 'gain_control') else 0.05,
-            'gain_control_v_offset': self.gain_control.v_offset if hasattr(self, 'gain_control') else 0.0
+            'gain_control_v_offset': self.gain_control.v_offset if hasattr(self, 'gain_control') else 0.0,
+            'workspace_umbral': self.workspace.umbral,
+            'workspace_history': self.workspace._fr_workspace_history,
+            'entorno_x': self.entorno.x,
+            'entorno_y': self.entorno.y,
+            'entorno_theta': self.entorno.theta,
+            'entorno_x_comida': self.entorno.x_comida,
+            'entorno_y_comida': self.entorno.y_comida,
+            'entorno_comidas_ingeridas': self.entorno.comidas_ingeridas
         }
         try:
             with open(filepath, 'wb') as f:
@@ -875,6 +1088,17 @@ class BrainUnico:
                 self.gain_control.target_rate = data['gain_control_target_rate']
                 self.gain_control.alpha_gain = data['gain_control_alpha_gain']
                 self.gain_control.v_offset = data['gain_control_v_offset']
+            if 'workspace_umbral' in data:
+                self.workspace.umbral = data['workspace_umbral']
+                self.workspace._fr_workspace_history = data['workspace_history']
+                
+            if 'entorno_x' in data:
+                self.entorno.x = data['entorno_x']
+                self.entorno.y = data['entorno_y']
+                self.entorno.theta = data['entorno_theta']
+                self.entorno.x_comida = data['entorno_x_comida']
+                self.entorno.y_comida = data['entorno_y_comida']
+                self.entorno.comidas_ingeridas = data['entorno_comidas_ingeridas']
                 
             new_v_thresh_base = self.v_thresh_arr.copy()
             if hasattr(self, 'gain_control') and self.gain_control.active:
@@ -933,21 +1157,43 @@ def simular_y_servir():
     print("Monitorea la simulación en: http://localhost:8000")
     
     try:
-        # Corremos 300 pasos de simulación (150 segundos biológicos simulados)
-        max_steps = 300
+        # Corremos 600 pasos de simulación (300 segundos biológicos simulados)
+        max_steps = 600
         for _ in range(max_steps):
             cerebro.step()
             h = cerebro.history[-1]
             if cerebro.step_count % 10 == 0:
-                print(f"[Paso {h['step']}] t={h['time']/1000:.1f}s | Estado: {h['state']} | "
-                      f"Sinapsis Activas: {h['synapses']} | W Promedio: {h['w_mean']:.3f} | "
-                      f"Dopamina: {h['da']:.2f} | Frustración: {cerebro.frustration:.2f} | "
-                      f"Energía Media: {h['energy_mean']:.2%}")
+                e = cerebro.entorno
+                motor_rates = cerebro.neurons.firing_rate[25:40] / Hz
+                motor_mean = float(np.mean(motor_rates))
+                print(f"[Paso {h['step']}] t={h['time']/1000:.1f}s | {h['state']} | "
+                      f"W={h['w_mean']:.3f} | DA={h['da']:.2f} | E={h['energy_mean']:.0%} | "
+                      f"Pos=({e.x:.1f},{e.y:.1f}) d={e.distancia_a_comida():.1f} | "
+                      f"Motor={motor_mean:.1f}Hz | Comidas={e.comidas_ingeridas}")
             
             # Pequeño sleep para control de CPU en ejecuciones de telemetría en vivo
             time_mod.sleep(0.05)
             
         print("\n[INFO] Simulación completada con éxito.")
+        
+        # Guardar el estado de inmediato antes de entrar al bucle del servidor para prevenir pérdidas si el proceso se mata
+        cerebro.save_state(state_path)
+        
+        # Guardar resultados y JSON final de inmediato
+        log_path = os.path.join(LOGS_DIR, "cerebro_unico_sim_results.pkl")
+        try:
+            with open(log_path, 'wb') as f:
+                pickle.dump(cerebro.history, f)
+            print(f"[SAVE] Historial de simulación guardado en: {log_path}")
+        except Exception as e:
+            print(f"[ERROR] No se pudo guardar el historial: {e}")
+            
+        try:
+            with open(os.path.join(LOGS_DIR, "cerebro_unico_state_final.json"), 'w') as f:
+                json.dump(cerebro.history[-1], f)
+        except:
+            pass
+
         print("El servidor HTTP sigue activo en http://localhost:8000 para que puedas navegar el dashboard final.")
         print("Presiona Ctrl+C para finalizar el proceso del servidor de forma segura.")
         while True:

@@ -4,6 +4,7 @@ let scene, camera, renderer, controls;
 let neuronsGroup, synapsesGroup;
 let neuronMeshes = [];
 let isInitialized = false;
+let agentPath = [];
 
 // Instancias de gráficos Chart.js
 let neuroChart, signalChart;
@@ -305,6 +306,124 @@ function updateDashboard(data) {
     }
 }
 
+// Renderizar Arena Toroidal 2D
+function updateArena2D(data) {
+    const canvas = document.getElementById('arenaCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // Si la simulación reinició, limpiar el rastro
+    if (data.step <= 1) {
+        agentPath = [];
+    }
+    
+    // Añadir posición actual al rastro
+    agentPath.push({ x: data.agent_x, y: data.agent_y });
+    if (agentPath.length > 80) {
+        agentPath.shift();
+    }
+    
+    // Actualizar telemetría textual
+    document.getElementById('val-pos').innerText = `(${data.agent_x.toFixed(1)}, ${data.agent_y.toFixed(1)})`;
+    document.getElementById('val-meals').innerText = data.meals_eaten;
+    
+    // Limpiar canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 1. Dibujar rejilla toroidal (cada 10 unidades de arena, límite es -40 a 40)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.lineWidth = 1;
+    for (let gx = -30; gx <= 30; gx += 10) {
+        const cx = ((gx + 40) / 80) * canvas.width;
+        ctx.beginPath();
+        ctx.moveTo(cx, 0);
+        ctx.lineTo(cx, canvas.height);
+        ctx.stroke();
+    }
+    for (let gy = -30; gy <= 30; gy += 10) {
+        const cy = ((40 - gy) / 80) * canvas.height;
+        ctx.beginPath();
+        ctx.moveTo(0, cy);
+        ctx.lineTo(canvas.width, cy);
+        ctx.stroke();
+    }
+    
+    // Ejes centrales (cruces)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.moveTo(0, canvas.height / 2);
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
+    
+    // 2. Dibujar rastro difuminado (trayectoria)
+    for (let i = 1; i < agentPath.length; i++) {
+        const pt = agentPath[i];
+        const prev = agentPath[i - 1];
+        
+        // Evitar líneas cruzando todo el mapa por salto toroidal
+        const dx = Math.abs(pt.x - prev.x);
+        const dy = Math.abs(pt.y - prev.y);
+        if (dx > 40 || dy > 40) {
+            continue;
+        }
+        
+        const cx1 = ((prev.x + 40) / 80) * canvas.width;
+        const cy1 = ((40 - prev.y) / 80) * canvas.height;
+        const cx2 = ((pt.x + 40) / 80) * canvas.width;
+        const cy2 = ((40 - pt.y) / 80) * canvas.height;
+        
+        const alpha = (i / agentPath.length) * 0.45;
+        ctx.strokeStyle = `rgba(0, 229, 255, ${alpha})`;
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.moveTo(cx1, cy1);
+        ctx.lineTo(cx2, cy2);
+        ctx.stroke();
+    }
+    
+    // 3. Dibujar comida (glowing neon green)
+    const fx = ((data.food_x + 40) / 80) * canvas.width;
+    const fy = ((40 - data.food_y) / 80) * canvas.height;
+    
+    ctx.save();
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#00ff88';
+    ctx.fillStyle = '#00ff88';
+    ctx.beginPath();
+    // Oscilación de radio para efecto latido
+    const pulse = 6 + 2 * Math.sin(Date.now() / 150);
+    ctx.arc(fx, fy, pulse, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+    
+    // 4. Dibujar agente (glowing cyan circle + vector de dirección)
+    const ax = ((data.agent_x + 40) / 80) * canvas.width;
+    const ay = ((40 - data.agent_y) / 80) * canvas.height;
+    
+    ctx.save();
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = '#00e5ff';
+    ctx.fillStyle = '#00e5ff';
+    ctx.beginPath();
+    ctx.arc(ax, ay, 6, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Vector dirección (línea blanca)
+    const hlen = 14;
+    const hx = ax + hlen * Math.cos(data.agent_theta);
+    const hy = ay - hlen * Math.sin(data.agent_theta); // resta porque canvas Y aumenta hacia abajo
+    
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(hx, hy);
+    ctx.stroke();
+    ctx.restore();
+}
+
 // Ciclo de Fetching de datos
 async function fetchData() {
     try {
@@ -315,6 +434,7 @@ async function fetchData() {
         // Actualizar vistas
         updateNetwork3D(data);
         updateDashboard(data);
+        updateArena2D(data);
     } catch (err) {
         console.warn('Esperando datos de simulación activa...', err.message);
     }
