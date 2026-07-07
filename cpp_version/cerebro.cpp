@@ -583,21 +583,21 @@ void BrainUnico::step() {
                     
                     if (true_state == 0) {
                         // Vacío: Excitar motor de vacío, inhibir resto de motor y todas las ocultas activas
-                        for (int i = 50; i < 60; ++i) neurons[i].I_ext = 6.0;
+                        for (int i = 50; i < 60; ++i) neurons[i].I_ext = 15.0;
                         for (int i = 60; i < 80; ++i) neurons[i].I_ext = -10.0;
                         for (int i = 20; i < 44; ++i) neurons[i].I_ext = -10.0;
                     } else if (true_state == 1) {
                         // Sujeto A: Excitar ocultas A (20-31) y motor A (60-69), inhibir resto
-                        for (int i = 20; i < 32; ++i) neurons[i].I_ext = 4.0;
+                        for (int i = 20; i < 32; ++i) neurons[i].I_ext = 12.0;
                         for (int i = 32; i < 44; ++i) neurons[i].I_ext = -10.0;
-                        for (int i = 60; i < 70; ++i) neurons[i].I_ext = 6.0;
+                        for (int i = 60; i < 70; ++i) neurons[i].I_ext = 15.0;
                         for (int i = 50; i < 60; ++i) neurons[i].I_ext = -10.0;
                         for (int i = 70; i < 80; ++i) neurons[i].I_ext = -10.0;
                     } else if (true_state == 2) {
                         // Sujeto B: Excitar ocultas B (32-43) y motor B (70-79), inhibir resto
                         for (int i = 20; i < 32; ++i) neurons[i].I_ext = -10.0;
-                        for (int i = 32; i < 44; ++i) neurons[i].I_ext = 4.0;
-                        for (int i = 70; i < 80; ++i) neurons[i].I_ext = 6.0;
+                        for (int i = 32; i < 44; ++i) neurons[i].I_ext = 12.0;
+                        for (int i = 70; i < 80; ++i) neurons[i].I_ext = 15.0;
                         for (int i = 50; i < 70; ++i) neurons[i].I_ext = -10.0;
                     }
                 } else {
@@ -974,10 +974,21 @@ void BrainUnico::structural_plasticity() {
         }
     }
 
-    // 2. Sinaptogénesis basada en distancia 3D
+    // 2. Sinaptogénesis basada en distancia 3D (solo en proyecciones permitidas por la arquitectura)
     for (size_t k = 0; k < synapses.size(); ++k) {
         auto& s = synapses[k];
         if (s.is_active < 0.5 && s.is_excitatory > 0.5) {
+            int pre_layer = neurons[s.pre].layer_id;
+            int post_layer = neurons[s.post].layer_id;
+            
+            bool allowed = false;
+            if (pre_layer == 0 && post_layer == 1) allowed = true;      // Sensory -> Hidden
+            else if (pre_layer == 1 && post_layer == 2) allowed = true; // Hidden -> Motor
+            else if (pre_layer == 1 && post_layer == 1) allowed = true; // Recurrente Hidden
+            else if (pre_layer == 2 && post_layer == 2) allowed = true; // Recurrente Motor
+            
+            if (!allowed) continue;
+
             double dist = dist_3d[k];
             double p_conn = 0.005 * std::exp(-dist / 30.0);
             if (rand_dist(gen) < p_conn) {
