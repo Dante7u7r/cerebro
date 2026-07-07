@@ -332,20 +332,19 @@ BrainUnico::BrainUnico()
             continue;
         }
 
-        if (pre_layer == 0 && post_layer == 1 && p < 0.50 && s.pre < 10) active = true; // Solo proyectar subportadoras CSI (0-9) para evitar interferencia de propiocepción (densidad 0.50)
-        else if (pre_layer == 1 && post_layer == 2 && p < 0.50) active = true; // Densidad 0.50
-        else if (pre_layer == 1 && post_layer == 3 && p < 0.25) active = false; // Deshabilitar PFC (trabajo memoria) para CSI
-        else if (pre_layer == 3 && post_layer == 1 && p < 0.25) active = false;
-        else if (pre_layer == 3 && post_layer == 2 && p < 0.25) active = false;
-        else if (pre_layer == 1 && post_layer == 1 && p < 0.20) active = true; // Densidad 0.20
-        else if (pre_layer == 3 && post_layer == 3 && p < 0.25) active = false;
-        else if (pre_layer == 2 && post_layer == 2 && p < 0.05) active = true;
+        if (pre_layer == 0 && post_layer == 1 && p < 0.50 && s.pre < 10) active = true; // Sensory -> Hidden 1 (solo CSI 0-9)
+        else if (pre_layer == 1 && post_layer == 3 && p < 0.50 && s.post < 96) active = true; // Hidden 1 -> Hidden 2 (PFC Excitador)
+        else if (pre_layer == 3 && post_layer == 2 && p < 0.50) active = true; // Hidden 2 (PFC) -> Motor
+        else if (pre_layer == 1 && post_layer == 1 && p < 0.20) active = true; // Recurrente Hidden 1
+        else if (pre_layer == 3 && post_layer == 3 && p < 0.20) active = true; // Recurrente Hidden 2 (PFC)
+        else if (pre_layer == 2 && post_layer == 2 && p < 0.05) active = true; // Recurrente Motor
 
         if (active && s.pre != s.post) { // Evitar autolazos
             s.is_active = 1.0;
             double scale = 1.0;
-            if (pre_layer == 0 && post_layer == 1) scale = 0.5; // Amplificación sensorial-oculta (Calibrado a escala metabólica baja)
-            if (pre_layer == 1 && post_layer == 2) scale = 0.5; // Amplificación oculta-motora (Calibrado a escala metabólica baja)
+            if (pre_layer == 0 && post_layer == 1) scale = 0.5; // Amplificación Sensory -> Hidden 1
+            if (pre_layer == 1 && post_layer == 3) scale = 0.5; // Amplificación Hidden 1 -> Hidden 2 (PFC)
+            if (pre_layer == 3 && post_layer == 2) scale = 0.5; // Amplificación Hidden 2 (PFC) -> Motor
             s.w = scale * ((s.is_excitatory > 0.5) ? (0.8 + rand_dist(gen) * 0.6) : 1.2);
             s.myelination = 0.1 + rand_dist(gen) * 0.2;
         }
@@ -561,30 +560,33 @@ void BrainUnico::step() {
             double trial_timer = hardware->get_csi_trial_timer();
             if (true_state >= 0) {
                 if (trial_timer < 10.0) {  // Profesor activo en los primeros 10s del ensayo de 15s
-                    // Limpiar corrientes externas y fijar guía/profesor (para neuronas motoras 50-79 y ocultas 20-43)
-                    for (int i = 20; i < 44; ++i) {
-                        neurons[i].I_ext = 0.0;
-                    }
-                    for (int i = 50; i < 80; ++i) {
-                        neurons[i].I_ext = 0.0;
-                    }
+                    // Limpiar corrientes externas y fijar guía/profesor (capas 1, 2 y 3)
+                    for (int i = 20; i < 44; ++i) neurons[i].I_ext = 0.0;
+                    for (int i = 50; i < 80; ++i) neurons[i].I_ext = 0.0;
+                    for (int i = 80; i < 100; ++i) neurons[i].I_ext = 0.0;
                     
                     if (true_state == 0) {
-                        // Vacío: Excitar motor de vacío, inhibir resto de motor y todas las ocultas activas
+                        // Vacío: Excitar motor de vacío, inhibir resto y todas las ocultas
                         for (int i = 50; i < 60; ++i) neurons[i].I_ext = 15.0;
                         for (int i = 60; i < 80; ++i) neurons[i].I_ext = -35.0;
                         for (int i = 20; i < 44; ++i) neurons[i].I_ext = -35.0;
+                        for (int i = 80; i < 100; ++i) neurons[i].I_ext = -35.0;
                     } else if (true_state == 1) {
-                        // Sujeto A: Excitar ocultas A (20-31) y motor A (60-69), inhibir resto
+                        // Sujeto A: Excitar ocultas A (20-31), PFC A (80-87) y motor A (60-69); inhibir resto
                         for (int i = 20; i < 32; ++i) neurons[i].I_ext = 12.0;
                         for (int i = 32; i < 44; ++i) neurons[i].I_ext = -35.0;
+                        for (int i = 80; i < 88; ++i) neurons[i].I_ext = 12.0;
+                        for (int i = 88; i < 100; ++i) neurons[i].I_ext = -35.0;
                         for (int i = 60; i < 70; ++i) neurons[i].I_ext = 15.0;
                         for (int i = 50; i < 60; ++i) neurons[i].I_ext = -35.0;
                         for (int i = 70; i < 80; ++i) neurons[i].I_ext = -35.0;
                     } else if (true_state == 2) {
-                        // Sujeto B: Excitar ocultas B (32-43) y motor B (70-79), inhibir resto
+                        // Sujeto B: Excitar ocultas B (32-43), PFC B (88-95) y motor B (70-79); inhibir resto
                         for (int i = 20; i < 32; ++i) neurons[i].I_ext = -35.0;
                         for (int i = 32; i < 44; ++i) neurons[i].I_ext = 12.0;
+                        for (int i = 80; i < 88; ++i) neurons[i].I_ext = -35.0;
+                        for (int i = 88; i < 96; ++i) neurons[i].I_ext = 12.0;
+                        for (int i = 96; i < 100; ++i) neurons[i].I_ext = -35.0;
                         for (int i = 70; i < 80; ++i) neurons[i].I_ext = 15.0;
                         for (int i = 50; i < 70; ++i) neurons[i].I_ext = -35.0;
                     }
@@ -592,6 +594,7 @@ void BrainUnico::step() {
                     // Fase de evaluacion autonoma (t >= 10s): limpiar corrientes del profesor
                     for (int i = 20; i < 44; ++i) neurons[i].I_ext = 0.0;
                     for (int i = 50; i < 80; ++i) neurons[i].I_ext = 0.0;
+                    for (int i = 80; i < 100; ++i) neurons[i].I_ext = 0.0;
                 }
             }
         }
@@ -618,11 +621,11 @@ void BrainUnico::step() {
             bool is_clamped = false;
             if (brain_state == "AWAKE" && trial_timer < 10.0) {
                 if (true_state == 0) {
-                    if ((i >= 20 && i < 44) || (i >= 60 && i < 80)) is_clamped = true;
+                    if ((i >= 20 && i < 44) || (i >= 60 && i < 80) || (i >= 80 && i < 100)) is_clamped = true;
                 } else if (true_state == 1) {
-                    if ((i >= 32 && i < 44) || (i >= 50 && i < 60) || (i >= 70 && i < 80)) is_clamped = true;
+                    if ((i >= 32 && i < 44) || (i >= 50 && i < 60) || (i >= 70 && i < 80) || (i >= 88 && i < 100)) is_clamped = true;
                 } else if (true_state == 2) {
-                    if ((i >= 20 && i < 32) || (i >= 50 && i < 70)) is_clamped = true;
+                    if ((i >= 20 && i < 32) || (i >= 50 && i < 70) || (i >= 80 && i < 88) || (i >= 96 && i < 100)) is_clamped = true;
                 }
             }
 
