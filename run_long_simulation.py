@@ -1,6 +1,10 @@
-from cerebro_unico import BrainUnico
-import pickle
+import sys
 import os
+import pickle
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, SCRIPT_DIR)
+from cerebro_unico import BrainUnico
 
 cerebro = BrainUnico()
 print("Starting long simulation: 1500 steps (750 seconds of biological time)...")
@@ -17,7 +21,7 @@ except KeyboardInterrupt:
     print("\nSimulation interrupted.")
 
 # Save long history
-LOGS_DIR = r"C:\Users\maruc\Proyectos\trabajando\cerebro-main\logs"
+LOGS_DIR = os.path.join(SCRIPT_DIR, "logs")
 os.makedirs(LOGS_DIR, exist_ok=True)
 log_path = os.path.join(LOGS_DIR, "cerebro_unico_long_sim_results.pkl")
 with open(log_path, 'wb') as f:

@@ -572,8 +572,8 @@ class BrainUnico:
         # Configurar delays basados en distancia 3D
         pos_pre = np.column_stack((self.x[i_idx], self.y[i_idx], self.z[i_idx]))
         pos_post = np.column_stack((self.x[j_idx], self.y[j_idx], self.z[j_idx]))
-        dist_3d = np.linalg.norm(pos_pre - pos_post, axis=1)
-        self.base_delays = (1.5 + 2.5 * (dist_3d / np.max(dist_3d))) * ms
+        self.dist_3d = np.linalg.norm(pos_pre - pos_post, axis=1)
+        self.base_delays = (1.5 + 2.5 * (self.dist_3d / np.max(self.dist_3d))) * ms
         self.synapses.delay = self.base_delays
         
         # Monitoreo
@@ -594,6 +594,10 @@ class BrainUnico:
         self.workspace = EspacioGlobal()
         self.decay_factor = 0.985  # Decaimiento pasivo de sinapsis por ciclo homeostático (calibrado)
         self.entorno = Entorno2D()  # Entorno 2D en lazo cerrado (volante y llantas)
+        
+        # Parámetros para estrangular la escritura del JSON en disco
+        self.last_json_write_time = 0.0
+        self.json_write_interval = 0.15  # En segundos de tiempo real
         
         if state_path is not None and os.path.exists(state_path):
             self.load_state(state_path)
@@ -663,12 +667,7 @@ class BrainUnico:
         inactive_mask = (is_active_arr == 0.0) & is_exc
         if np.any(inactive_mask):
             inactive_indices = np.where(inactive_mask)[0]
-            i_idx = self.synapses.i[inactive_indices]
-            j_idx = self.synapses.j[inactive_indices]
-            
-            pos_pre = np.column_stack((self.x[i_idx], self.y[i_idx], self.z[i_idx]))
-            pos_post = np.column_stack((self.x[j_idx], self.y[j_idx], self.z[j_idx]))
-            dists = np.linalg.norm(pos_pre - pos_post, axis=1)
+            dists = self.dist_3d[inactive_indices]
             
             # Probabilidad de sinaptogénesis baja (0.005 base)
             p_conn = 0.005 * np.exp(-dists / 30.0)
@@ -895,7 +894,11 @@ class BrainUnico:
         # Escribir estado actual en JSON
         self.write_state_json()
         
-    def write_state_json(self):
+    def write_state_json(self, force=False):
+        current_time = time_mod.time()
+        if not force and (current_time - self.last_json_write_time < self.json_write_interval):
+            return
+        self.last_json_write_time = current_time
         w_syn = self.synapses.w[:]
         i_indices = self.synapses.i[:]
         j_indices = self.synapses.j[:]
@@ -1068,7 +1071,8 @@ class BrainUnico:
             self.neurons.g_ampa_dend = data['neurons_g_ampa_dend']
             self.neurons.g_gaba_dend = data['neurons_g_gaba_dend']
             self.neurons.firing_rate = data['neurons_firing_rate']
-            self.neurons.last_spike = data['neurons_last_spike']
+            last_spike_sec = np.asarray(data['neurons_last_spike'])
+            self.neurons.last_spike = (last_spike_sec - (self.time / 1000.0)) * second
             self.synapses.w = data['synapses_w']
             self.synapses.myelination = data['synapses_myelination']
             self.synapses.is_active = data['synapses_is_active']
@@ -1110,8 +1114,8 @@ class BrainUnico:
             j_idx = self.synapses.j[:]
             pos_pre = np.column_stack((self.x[i_idx], self.y[i_idx], self.z[i_idx]))
             pos_post = np.column_stack((self.x[j_idx], self.y[j_idx], self.z[j_idx]))
-            dist_3d = np.linalg.norm(pos_pre - pos_post, axis=1)
-            self.base_delays = (1.5 + 2.5 * (dist_3d / np.max(dist_3d))) * ms
+            self.dist_3d = np.linalg.norm(pos_pre - pos_post, axis=1)
+            self.base_delays = (1.5 + 2.5 * (self.dist_3d / np.max(self.dist_3d))) * ms
             print(f"[LOAD] Estado completo restaurado desde: {filepath}")
             return True
         except Exception as e:
@@ -1153,74 +1157,78 @@ def simular_y_servir():
             
     threading.Thread(target=lanzar_app_window, daemon=True).start()
     
-    print("\nSimulación iniciada. Presiona Ctrl+C para finalizar de forma segura.")
-    print("Monitorea la simulación en: http://localhost:8000")
+    sim_running = True
+    
+    def run_sim_loop():
+        nonlocal sim_running
+        print("\nSimulación iniciada. Ejecutándose indefinidamente.")
+        print("Presiona Ctrl+C una vez para pausar/detener la simulación de forma segura y guardar el estado.")
+        print("Monitorea la simulación en: http://localhost:8000")
+        print("-" * 80)
+        try:
+            while sim_running:
+                cerebro.step()
+                h = cerebro.history[-1]
+                if cerebro.step_count % 10 == 0:
+                    e = cerebro.entorno
+                    motor_rates = cerebro.neurons.firing_rate[25:40] / Hz
+                    motor_mean = float(np.mean(motor_rates))
+                    print(f"[Paso {h['step']}] t={h['time']/1000:.1f}s | {h['state']} | "
+                          f"W={h['w_mean']:.3f} | DA={h['da']:.2f} | E={h['energy_mean']:.0%} | "
+                          f"Pos=({e.x:.1f},{e.y:.1f}) d={e.distancia_a_comida():.1f} | "
+                          f"Motor={motor_mean:.1f}Hz | Comidas={e.comidas_ingeridas}")
+                
+                # Pequeño sleep para control de CPU en ejecuciones de telemetría en vivo
+                time_mod.sleep(0.05)
+        except Exception as e:
+            print(f"\n[ERROR] Error en el hilo de simulación: {e}")
+            sim_running = False
+
+    sim_thread = threading.Thread(target=run_sim_loop, daemon=True)
+    sim_thread.start()
     
     try:
-        # Corremos 600 pasos de simulación (300 segundos biológicos simulados)
-        max_steps = 600
-        for _ in range(max_steps):
-            cerebro.step()
-            h = cerebro.history[-1]
-            if cerebro.step_count % 10 == 0:
-                e = cerebro.entorno
-                motor_rates = cerebro.neurons.firing_rate[25:40] / Hz
-                motor_mean = float(np.mean(motor_rates))
-                print(f"[Paso {h['step']}] t={h['time']/1000:.1f}s | {h['state']} | "
-                      f"W={h['w_mean']:.3f} | DA={h['da']:.2f} | E={h['energy_mean']:.0%} | "
-                      f"Pos=({e.x:.1f},{e.y:.1f}) d={e.distancia_a_comida():.1f} | "
-                      f"Motor={motor_mean:.1f}Hz | Comidas={e.comidas_ingeridas}")
-            
-            # Pequeño sleep para control de CPU en ejecuciones de telemetría en vivo
-            time_mod.sleep(0.05)
-            
-        print("\n[INFO] Simulación completada con éxito.")
-        
-        # Guardar el estado de inmediato antes de entrar al bucle del servidor para prevenir pérdidas si el proceso se mata
-        cerebro.save_state(state_path)
-        
-        # Guardar resultados y JSON final de inmediato
-        log_path = os.path.join(LOGS_DIR, "cerebro_unico_sim_results.pkl")
-        try:
-            with open(log_path, 'wb') as f:
-                pickle.dump(cerebro.history, f)
-            print(f"[SAVE] Historial de simulación guardado en: {log_path}")
-        except Exception as e:
-            print(f"[ERROR] No se pudo guardar el historial: {e}")
-            
-        try:
-            with open(os.path.join(LOGS_DIR, "cerebro_unico_state_final.json"), 'w') as f:
-                json.dump(cerebro.history[-1], f)
-        except:
-            pass
-
-        print("El servidor HTTP sigue activo en http://localhost:8000 para que puedas navegar el dashboard final.")
-        print("Presiona Ctrl+C para finalizar el proceso del servidor de forma segura.")
-        while True:
-            time_mod.sleep(1.0)
+        # Esperar en el hilo principal mientras la simulación corre
+        while sim_running:
+            time_mod.sleep(0.5)
             
     except KeyboardInterrupt:
-        print("\nInterrupción detectada. Apagando servidor y simulación...")
+        print("\n[WARN] Interrupción detectada. Deteniendo el bucle de simulación...")
+        sim_running = False
+        sim_thread.join(timeout=3.0)
+        
+    # Forzar la última escritura JSON para el visualizador
+    cerebro.write_state_json(force=True)
+    
+    # Guardar el estado biológico completo para la próxima reanudación
+    cerebro.save_state(state_path)
+    
+    # Guardar resultados finales de la corrida (historial)
+    log_path = os.path.join(LOGS_DIR, "cerebro_unico_sim_results.pkl")
+    try:
+        with open(log_path, 'wb') as f:
+            pickle.dump(cerebro.history, f)
+        print(f"[SAVE] Historial de simulación guardado en: {log_path}")
+    except Exception as e:
+        print(f"[ERROR] No se pudo guardar el historial: {e}")
+        
+    # Guardar una copia estática del último JSON en logs para registro histórico
+    try:
+        with open(os.path.join(LOGS_DIR, "cerebro_unico_state_final.json"), 'w') as f:
+            json.dump(cerebro.history[-1], f)
+    except:
+        pass
+        
+    print("\n[OK] Simulación detenida y persistida con éxito.")
+    print("El servidor HTTP sigue activo en http://localhost:8000 para que puedas navegar el dashboard final.")
+    print("Presiona Ctrl+C nuevamente para apagar el servidor de forma segura y salir.")
+    
+    try:
+        while True:
+            time_mod.sleep(1.0)
+    except KeyboardInterrupt:
+        print("\nInterrupción detectada. Apagando servidor...")
     finally:
-        # Guardar el estado biológico completo para la próxima ejecución
-        cerebro.save_state(state_path)
-
-        # Guardar resultados finales de la corrida (historial)
-        log_path = os.path.join(LOGS_DIR, "cerebro_unico_sim_results.pkl")
-        try:
-            with open(log_path, 'wb') as f:
-                pickle.dump(cerebro.history, f)
-            print(f"[SAVE] Historial de simulación guardado en: {log_path}")
-        except Exception as e:
-            print(f"[ERROR] No se pudo guardar el historial: {e}")
-            
-        # Guardar una copia estática del último JSON en logs para registro histórico
-        try:
-            with open(os.path.join(LOGS_DIR, "cerebro_unico_state_final.json"), 'w') as f:
-                json.dump(cerebro.history[-1], f)
-        except:
-            pass
-            
         server.stop()
         print("Cerebro apagado de forma segura.")
 

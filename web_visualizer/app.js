@@ -404,8 +404,9 @@ function updateArena2D(data) {
     
     ctx.save();
     ctx.shadowBlur = 12;
-    ctx.shadowColor = '#00e5ff';
-    ctx.fillStyle = '#00e5ff';
+    const isBlind = data.modo_ciego === true;
+    ctx.shadowColor = isBlind ? '#ffaa00' : '#00e5ff';
+    ctx.fillStyle = isBlind ? '#ffaa00' : '#00e5ff';
     ctx.beginPath();
     ctx.arc(ax, ay, 6, 0, 2 * Math.PI);
     ctx.fill();

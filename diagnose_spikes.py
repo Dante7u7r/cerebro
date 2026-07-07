@@ -58,10 +58,10 @@ print()
 # Pero necesitamos al menos (v_thresh - v_rest) / (E_ampa - v_rest) * tau_ampa/tau_m para disparar
 # = (-55 - (-65)) / (0 - (-65)) * 5/15 = 10/65 * 0.33 = 0.051
 # Necesitamos g_ampa_peak >= 0.051 para disparar UNA neurona sin ruido
-print("=== Cálculo teórico de umbral de conductancia ===")
+print("=== Calculo teorico de umbral de conductancia ===")
 print(f"  Para disparar una oculta (v_rest=-65, v_thresh=-55, E_ampa=0):")
-print(f"  g_ampa_peak necesaria ≈ (v_thresh - v_rest) * tau_ampa / ((E_ampa - v_rest) * tau_m)")
+print(f"  g_ampa_peak necesaria = (v_thresh - v_rest) * tau_ampa / ((E_ampa - v_rest) * tau_m)")
 print(f"  = (-55-(-65)) * 5ms / ((0-(-65)) * 15ms) = 10*5 / (65*15) = {50/(65*15):.4f}")
-print(f"  Un spike pre aporta: Δg_ampa = w * u * x * (1+0.6*myel)")
-print(f"  Con w=0.6, u=0.2, x=1.0, myel=0.2: Δg = 0.6*0.2*1.0*1.12 = {0.6*0.2*1.0*1.12:.4f}")
-print(f"  Necesitamos ~{0.0513/0.1344:.0f} spikes convergentes simultáneos para disparar sin ruido")
+print(f"  Un spike pre aporta: d_g_ampa = w * u * x * (1+0.6*myel)")
+print(f"  Con w=0.6, u=0.2, x=1.0, myel=0.2: d_g = 0.6*0.2*1.0*1.12 = {0.6*0.2*1.0*1.12:.4f}")
+print(f"  Necesitamos ~{0.0513/0.1344:.0f} spikes convergentes simultaneos para disparar sin ruido")

@@ -5,7 +5,8 @@ import sys
 import numpy as np
 
 # Asegurar que podemos importar cerebro_unico
-sys.path.insert(0, r"C:\Users\maruc\Proyectos\trabajando\cerebro-main")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, SCRIPT_DIR)
 from cerebro_unico import BrainUnico, LOGS_DIR
 
 # 2 horas = 7200 segundos de tiempo real
