@@ -158,7 +158,7 @@ void EspacioGlobal::adaptar_umbral() {
 BrainUnico::BrainUnico()
     : time_ms(0.0), step_count(0), brain_state("AWAKE"),
       pruned_synapses(0), created_synapses(0), frustration(0.0), resilience(0.2),
-      decay_factor(0.999), current_ring_step(0), spikes_in_current_batch(0),
+      decay_factor(0.995), current_ring_step(0), spikes_in_current_batch(0),
       hardware(std::make_unique<VirtualBridge>()) {
     
     // Inicializar búferes de conductancias con delays
@@ -647,9 +647,13 @@ void BrainUnico::step() {
             double xi = normal_dist(gen);
             double noise_term = n.noise_base * frustration_factor * cortisol_factor * ach_factor * energy_factor * std::sqrt(1.0 / (n.tau_m / 1000.0)) * xi * std::sqrt(0.001);
 
-            // Integración de Euler
-            double dv = (-(n.v - n.v_rest) + I_syn_soma + I_coupling + n.I_ext + I_cpg) * 0.001 / (n.tau_m / 1000.0) + noise_term;
-            n.v += dv;
+            // Integración de Euler con periodo refractario de 2 ms (0.002 s) para evitar la epilepsia
+            if (current_time_sec - n.last_spike_time < 0.002) {
+                n.v = n.v_rest;
+            } else {
+                double dv = (-(n.v - n.v_rest) + I_syn_soma + I_coupling + n.I_ext + I_cpg) * 0.001 / (n.tau_m / 1000.0) + noise_term;
+                n.v += dv;
+            }
 
             double dv_dend = (-(n.v_dend - n.v_rest) + I_syn_dend) * 0.001 / (n.tau_dend / 1000.0);
             n.v_dend += dv_dend;
@@ -944,15 +948,15 @@ void BrainUnico::homeostasis() {
         double post_fr = neurons[s.post].firing_rate;
         
         // Multiplicativo: deprimir si está muy hiperactiva, potenciar si está hipoactiva
-        if (post_fr > 15.0) {
-            s.w *= (s.is_excitatory > 0.5) ? 0.995 : 1.005;
+        if (post_fr > 8.0) {
+            s.w *= (s.is_excitatory > 0.5) ? 0.98 : 1.02; // Hiperactiva (excitatorias bajan, inhibitorias suben)
         } else if (post_fr < 1.0) {
-            s.w *= (s.is_excitatory > 0.5) ? 1.002 : 0.998;
+            s.w *= (s.is_excitatory > 0.5) ? 1.01 : 0.99; // Hipoactiva (excitatorias suben, inhibitorias bajan)
         }
         
         // Aplicar decaimiento por desuso pasivo
         s.w *= decay_factor;
-        s.w = std::max(0.0, std::min(s.w, 2.0));
+        s.w = std::max(0.02, std::min(s.w, 2.0));
     }
 
     // Escalado astrocítico

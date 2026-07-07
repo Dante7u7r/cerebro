@@ -64,8 +64,20 @@ int main() {
     // Bucle asincrono continuo de simulacion
     auto last_log_time = std::chrono::steady_clock::now();
     
+    int max_steps = -1;
+    char* max_steps_env = std::getenv("MAX_STEPS");
+    if (max_steps_env) {
+        max_steps = std::atoi(max_steps_env);
+        std::cout << "[INFO] Limite de pasos detectado por entorno: " << max_steps << " pasos.\n";
+    }
+    
     while (sim_running) {
         cerebro.step();
+
+        if (max_steps > 0 && cerebro.step_count >= max_steps) {
+            std::cout << "\n[INFO] Simulacion alcanzo el limite de " << max_steps << " pasos. Guardando y saliendo...\n";
+            sim_running = false;
+        }
 
         // Imprimir telemetría en consola cada 500 ms de tiempo real
         auto now = std::chrono::steady_clock::now();
