@@ -67,8 +67,8 @@ void SynapticScaler::scale(BrainUnico& brain) {
             }
         }
         
-        // Escalado homeostático astrocítico bidireccional amortiguado (suave)
-        if (sum_w > 0.01 && !syn_indices.empty()) {
+        // Escalado homeostático astrocítico unidireccional amortiguado (suave)
+        if (sum_w > target_sum_w && !syn_indices.empty()) {
             double factor = target_sum_w / sum_w;
             // Coeficiente de amortiguación de 0.15 para evitar oscilaciones inestables en el aprendizaje
             double smooth_factor = 1.0 + 0.15 * (factor - 1.0);

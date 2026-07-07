@@ -117,7 +117,7 @@ public:
     double target_sum_w;
     bool active;
 
-    SynapticScaler(double target = 20.0, bool active_val = true);
+    SynapticScaler(double target = 6.0, bool active_val = true);
     void scale(class BrainUnico& brain);
 };
 
