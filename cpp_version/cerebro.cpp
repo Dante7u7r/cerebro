@@ -332,12 +332,12 @@ BrainUnico::BrainUnico()
             continue;
         }
 
-        if (pre_layer == 0 && post_layer == 1 && p < 0.35) active = true;
-        else if (pre_layer == 1 && post_layer == 2 && p < 0.35) active = true;
+        if (pre_layer == 0 && post_layer == 1 && p < 0.50 && s.pre < 10) active = true; // Solo proyectar subportadoras CSI (0-9) para evitar interferencia de propiocepción (densidad 0.50)
+        else if (pre_layer == 1 && post_layer == 2 && p < 0.50) active = true; // Densidad 0.50
         else if (pre_layer == 1 && post_layer == 3 && p < 0.25) active = false; // Deshabilitar PFC (trabajo memoria) para CSI
         else if (pre_layer == 3 && post_layer == 1 && p < 0.25) active = false;
         else if (pre_layer == 3 && post_layer == 2 && p < 0.25) active = false;
-        else if (pre_layer == 1 && post_layer == 1 && p < 0.15) active = true;
+        else if (pre_layer == 1 && post_layer == 1 && p < 0.20) active = true; // Densidad 0.20
         else if (pre_layer == 3 && post_layer == 3 && p < 0.25) active = false;
         else if (pre_layer == 2 && post_layer == 2 && p < 0.05) active = true;
 
@@ -637,7 +637,7 @@ void BrainUnico::step() {
             // Umbral base efectivo metabólico, modulado por offsets astrocítico y de ganancia independientes
             double astro_offset = (astrocytes[i / 10].calcium > 0.35) ? 2.5 : 0.0;
             double gain_offset = (n.layer_id == 2) ? gain_control.v_offset : 0.0;
-            double v_thresh_base_effective = n.v_thresh_base + 15.0 * std::pow(1.0 - n.energy, 2) + astro_offset + gain_offset;
+            double v_thresh_base_effective = n.v_thresh_base + 2.0 * std::pow(1.0 - n.energy, 2) + astro_offset + gain_offset; // Reducido de 15.0 a 2.0 para evitar fatiga metabólica por profesor
             n.v_thresh += (v_thresh_base_effective - n.v_thresh) * 0.001 / (n.tau_thresh / 1000.0);
 
             // Ruido dinámico estocástico (modulado por Cortisol global y Frustración local)
@@ -981,6 +981,7 @@ void BrainUnico::structural_plasticity() {
         }
     }
 
+    /* Comentado para prevenir el crecimiento descontrolado de densidad sináptica y la hiperexcitabilidad epiléptica en entrenamientos de largo plazo (estabilidad de biometría)
     // 2. Sinaptogénesis basada en distancia 3D (solo en proyecciones permitidas por la arquitectura)
     for (size_t k = 0; k < synapses.size(); ++k) {
         auto& s = synapses[k];
@@ -1007,6 +1008,7 @@ void BrainUnico::structural_plasticity() {
             }
         }
     }
+    */
 }
 
 void BrainUnico::sleep_replay() {
