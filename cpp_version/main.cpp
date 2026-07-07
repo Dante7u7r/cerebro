@@ -108,8 +108,10 @@ int main() {
             }
         }
 
+#ifndef NO_SERVER
         // Delay pequeño para controlar el consumo de CPU (50 ms por paso)
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
+#endif
     }
 
     // Guardar estado final

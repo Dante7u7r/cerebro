@@ -55,24 +55,18 @@ void VirtualBridge::get_sensory_input(const std::vector<Neuron>& neurons,
 
     // Señales Wi-Fi CSI omnidireccionales — siempre presentes.
     if (csi_true_state == 0) {
-        // VACIO: solo ruido de fondo bajo en todos los canales
-        for (int i = 0; i < 10; ++i)
-            input_currents[i] = 2.0 + noise_dist(gen);
+        // VACIO: sin señal (los canales permanecen en 0.0 nA)
     }
     else if (csi_true_state == 1) {
-        // SUJETO A: gait lento 1.4 Hz en subportadoras 0-4; ruido en 5-9
+        // SUJETO A: gait lento 1.4 Hz en subportadoras 0-4
         for (int i = 0; i < 5; ++i) {
             double ph = i * 0.25;
             input_currents[i] = 28.0 + 18.0 * std::sin(2.0 * M_PI * 1.4 * t_sec + ph)
                                      +  6.0 * std::sin(2.0 * M_PI * 2.8 * t_sec + ph);
         }
-        for (int i = 5; i < 10; ++i)
-            input_currents[i] = 2.0 + noise_dist(gen);
     }
     else if (csi_true_state == 2) {
-        // SUJETO B: gait rapido 2.5 Hz en subportadoras 5-9; ruido en 0-4
-        for (int i = 0; i < 5; ++i)
-            input_currents[i] = 2.0 + noise_dist(gen);
+        // SUJETO B: gait rapido 2.5 Hz en subportadoras 5-9
         for (int i = 5; i < 10; ++i) {
             double ph = (i - 5) * 0.35;
             input_currents[i] = 28.0 + 18.0 * std::cos(2.0 * M_PI * 2.5 * t_sec + ph)

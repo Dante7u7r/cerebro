@@ -8,11 +8,11 @@ Análisis científico cuantitativo de la simulación de **400 pasos** (~8.3 minu
 
 | Métrica | Cerebro Base (Sin Regulación) | Cerebro Regulado (Con Regulación) | Impacto / Diferencia |
 | :--- | :---: | :---: | :---: |
-| **Error Cuadrático Medio (MSE en AWAKE)** | 0.5004 | 0.5004 | +0.00% |
-| **Sinapsis Activas Finales** | 633 | 491 | -142 |
-| **Peso Sináptico Promedio (w)** | 1.3568 | 0.5589 | -58.80% |
+| **Error Cuadrático Medio (MSE en AWAKE)** | 0.6933 | 0.5031 | -27.43% |
+| **Sinapsis Activas Finales** | 370 | 397 | +27 |
+| **Peso Sináptico Promedio (w)** | 1.5052 | 0.6328 | -57.96% |
 | **Peso Sináptico Máximo (w_max)** | 2.0000 | 2.0000 | 0.0000 |
-| **Energía Celular Promedio** | 100.00% | 100.00% | +0.00% |
+| **Energía Celular Promedio** | 42.86% | 57.78% | +34.81% |
 | **Disparo Motor Final Promedio** | 0.00 Hz | 0.00 Hz | +0.00 Hz |
 
 ---

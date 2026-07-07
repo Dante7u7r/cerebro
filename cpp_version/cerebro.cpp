@@ -88,12 +88,6 @@ void GainController::adapt(BrainUnico& brain, double motor_firing) {
     
     double delta_offset = alpha_gain * (motor_firing - target_rate);
     v_offset = std::max(-5.0, std::min(v_offset + delta_offset, 10.0));
-
-    // Ajustar el umbral base efectivo de las neuronas motoras (índices 25 a 39)
-    for (int idx = N_SENSORY + N_HIDDEN; idx < N_SENSORY + N_HIDDEN + N_MOTOR; ++idx) {
-        double v_thresh_base = (brain.neurons[idx].type == 1) ? -55.0 : -57.0;
-        brain.neurons[idx].v_thresh_base = v_thresh_base + v_offset;
-    }
 }
 
 // ============================================================================
@@ -158,7 +152,7 @@ void EspacioGlobal::adaptar_umbral() {
 BrainUnico::BrainUnico()
     : time_ms(0.0), step_count(0), brain_state("AWAKE"),
       pruned_synapses(0), created_synapses(0), frustration(0.0), resilience(0.2),
-      decay_factor(0.995), current_ring_step(0), spikes_in_current_batch(0),
+      decay_factor(0.985), current_ring_step(0), spikes_in_current_batch(0),
       hardware(std::make_unique<VirtualBridge>()) {
     
     // Inicializar búferes de conductancias con delays
@@ -350,8 +344,8 @@ BrainUnico::BrainUnico()
         if (active && s.pre != s.post) { // Evitar autolazos
             s.is_active = 1.0;
             double scale = 1.0;
-            if (pre_layer == 0 && post_layer == 1) scale = 12.0; // Amplificación sensorial-oculta
-            if (pre_layer == 1 && post_layer == 2) scale = 12.0; // Amplificación oculta-motora
+            if (pre_layer == 0 && post_layer == 1) scale = 0.5; // Amplificación sensorial-oculta (Calibrado a escala metabólica baja)
+            if (pre_layer == 1 && post_layer == 2) scale = 0.5; // Amplificación oculta-motora (Calibrado a escala metabólica baja)
             s.w = scale * ((s.is_excitatory > 0.5) ? (0.8 + rand_dist(gen) * 0.6) : 1.2);
             s.myelination = 0.1 + rand_dist(gen) * 0.2;
         }
@@ -364,22 +358,9 @@ void BrainUnico::step() {
     
     frustration = 0.0;
     
-    // Determinar estado de sueño/vigilia usando Melatonina (Capa Endocrina)
-    if (brain_state == "AWAKE") {
-        melatonina = std::min(1.0, melatonina + 0.004);
-        if (melatonina > 0.80) {
-            brain_state = "SLOW_WAVE_SLEEP";
-        }
-    } else {
-        melatonina = std::max(0.0, melatonina - 0.02);
-        if (melatonina <= 0.0) {
-            brain_state = "AWAKE";
-        } else if (melatonina <= 0.30) {
-            brain_state = "REM";
-        } else {
-            brain_state = "SLOW_WAVE_SLEEP";
-        }
-    }
+    // Determinar estado de sueño/vigilia (Forzar AWAKE constante para entrenamiento y clasificación de CSI)
+    brain_state = "AWAKE";
+    melatonina = 0.0;
 
     // Extraer tasas de disparo de los neurons del paso previo para el Workspace
     std::vector<double> current_rates(N_TOTAL);
@@ -466,7 +447,13 @@ void BrainUnico::step() {
 
         // 6. Mapeo de Dopamina Fásica / Tónica basada en RPE
         // RPE positivo genera ráfagas de dopamina; RPE negativo genera caídas (dips)
-        neuromod.dopamine = 0.5 + 0.5 * std::tanh(delta * 3.0);
+        int ts = hardware->get_csi_true_state();
+        double tt = hardware->get_csi_trial_timer();
+        if (ts > 0 && tt < 10.0) {
+            neuromod.dopamine = 1.0; // Dopamina supervisada alta durante entrenamiento de CSI
+        } else {
+            neuromod.dopamine = 0.5 + 0.5 * std::tanh(delta * 3.0);
+        }
 
         // Si el agente comió (recompensa cruda), recargar energía y limpiar frustración
         if (reward > 0.0) {
@@ -549,14 +536,15 @@ void BrainUnico::step() {
         lists_built = true;
     }
 
+    int true_state = hardware->get_csi_true_state();
+    double trial_timer = hardware->get_csi_trial_timer();
+    bool stdp_active = (true_state > 0 && trial_timer < 10.0);
+
     for (int ms_step = 0; ms_step < (int)BATCH_MS; ++ms_step) {
         double current_time_sec = (time_ms - BATCH_MS + ms_step) / 1000.0;
 
         // Actualizar el generador de corriente caótico (Mapa Logístico) para el NCC (Amplitud reducida a 1.5)
         ncc_chaos_state = 3.99 * ncc_chaos_state * (1.0 - ncc_chaos_state);
-        for (int i = 90; i < 100; ++i) {
-            neurons[i].I_ext += ncc_chaos_state * 1.5;
-        }
 
         // 1. Filtro Sensorial IF (digitalización de entradas visuales y hambre en spikes discretos)
         if (brain_state == "AWAKE") {
@@ -584,21 +572,21 @@ void BrainUnico::step() {
                     if (true_state == 0) {
                         // Vacío: Excitar motor de vacío, inhibir resto de motor y todas las ocultas activas
                         for (int i = 50; i < 60; ++i) neurons[i].I_ext = 15.0;
-                        for (int i = 60; i < 80; ++i) neurons[i].I_ext = -10.0;
-                        for (int i = 20; i < 44; ++i) neurons[i].I_ext = -10.0;
+                        for (int i = 60; i < 80; ++i) neurons[i].I_ext = -35.0;
+                        for (int i = 20; i < 44; ++i) neurons[i].I_ext = -35.0;
                     } else if (true_state == 1) {
                         // Sujeto A: Excitar ocultas A (20-31) y motor A (60-69), inhibir resto
                         for (int i = 20; i < 32; ++i) neurons[i].I_ext = 12.0;
-                        for (int i = 32; i < 44; ++i) neurons[i].I_ext = -10.0;
+                        for (int i = 32; i < 44; ++i) neurons[i].I_ext = -35.0;
                         for (int i = 60; i < 70; ++i) neurons[i].I_ext = 15.0;
-                        for (int i = 50; i < 60; ++i) neurons[i].I_ext = -10.0;
-                        for (int i = 70; i < 80; ++i) neurons[i].I_ext = -10.0;
+                        for (int i = 50; i < 60; ++i) neurons[i].I_ext = -35.0;
+                        for (int i = 70; i < 80; ++i) neurons[i].I_ext = -35.0;
                     } else if (true_state == 2) {
                         // Sujeto B: Excitar ocultas B (32-43) y motor B (70-79), inhibir resto
-                        for (int i = 20; i < 32; ++i) neurons[i].I_ext = -10.0;
+                        for (int i = 20; i < 32; ++i) neurons[i].I_ext = -35.0;
                         for (int i = 32; i < 44; ++i) neurons[i].I_ext = 12.0;
                         for (int i = 70; i < 80; ++i) neurons[i].I_ext = 15.0;
-                        for (int i = 50; i < 70; ++i) neurons[i].I_ext = -10.0;
+                        for (int i = 50; i < 70; ++i) neurons[i].I_ext = -35.0;
                     }
                 } else {
                     // Fase de evaluacion autonoma (t >= 10s): limpiar corrientes del profesor
@@ -627,6 +615,17 @@ void BrainUnico::step() {
         for (int i = 0; i < N_TOTAL; ++i) {
             auto& n = neurons[i];
 
+            bool is_clamped = false;
+            if (trial_timer < 10.0) {
+                if (true_state == 0) {
+                    if ((i >= 20 && i < 44) || (i >= 60 && i < 80)) is_clamped = true;
+                } else if (true_state == 1) {
+                    if ((i >= 32 && i < 44) || (i >= 50 && i < 60) || (i >= 70 && i < 80)) is_clamped = true;
+                } else if (true_state == 2) {
+                    if ((i >= 20 && i < 32) || (i >= 50 && i < 70)) is_clamped = true;
+                }
+            }
+
             // CPG
             double I_cpg = n.cpg_amplitude * sin(2.0 * M_PI * current_time_sec / (n.signal_period / 1000.0)) * n.is_sensory;
             
@@ -635,8 +634,10 @@ void BrainUnico::step() {
             double I_syn_dend = n.g_ampa_dend * (n.E_ampa - n.v_dend) + n.g_gaba_dend * (n.E_gaba - n.v_dend);
             double I_coupling = n.g_coupling * (n.v_dend - n.v);
 
-            // Umbral base efectivo metabólico
-            double v_thresh_base_effective = n.v_thresh_base + 15.0 * std::pow(1.0 - n.energy, 2);
+            // Umbral base efectivo metabólico, modulado por offsets astrocítico y de ganancia independientes
+            double astro_offset = (astrocytes[i / 10].calcium > 0.35) ? 2.5 : 0.0;
+            double gain_offset = (n.layer_id == 2) ? gain_control.v_offset : 0.0;
+            double v_thresh_base_effective = n.v_thresh_base + 15.0 * std::pow(1.0 - n.energy, 2) + astro_offset + gain_offset;
             n.v_thresh += (v_thresh_base_effective - n.v_thresh) * 0.001 / (n.tau_thresh / 1000.0);
 
             // Ruido dinámico estocástico (modulado por Cortisol global y Frustración local)
@@ -647,11 +648,14 @@ void BrainUnico::step() {
             double xi = normal_dist(gen);
             double noise_term = n.noise_base * frustration_factor * cortisol_factor * ach_factor * energy_factor * std::sqrt(1.0 / (n.tau_m / 1000.0)) * xi * std::sqrt(0.001);
 
-            // Integración de Euler con periodo refractario de 2 ms (0.002 s) para evitar la epilepsia
-            if (current_time_sec - n.last_spike_time < 0.002) {
+            // Integración de Euler con periodo refractario de 2 ms (0.002 s) para evitar la epilepsia y corriente caótica transitoria
+            double I_chaos = (i >= 90 && i < 100) ? (ncc_chaos_state * 1.5) : 0.0;
+            if (is_clamped) {
+                n.v = n.v_rest;
+            } else if (current_time_sec - n.last_spike_time < 0.002) {
                 n.v = n.v_rest;
             } else {
-                double dv = (-(n.v - n.v_rest) + I_syn_soma + I_coupling + n.I_ext + I_cpg) * 0.001 / (n.tau_m / 1000.0) + noise_term;
+                double dv = (-(n.v - n.v_rest) + I_syn_soma + I_coupling + n.I_ext + I_cpg + I_chaos) * 0.001 / (n.tau_m / 1000.0) + noise_term;
                 n.v += dv;
             }
 
@@ -665,7 +669,7 @@ void BrainUnico::step() {
             n.g_gaba_dend *= (1.0 - 1.0 / 10.0);
 
             // Verificar Spikes
-            if (n.v > n.v_thresh) {
+            if (!is_clamped && n.v > n.v_thresh) {
                 current_step_spikes[i] = true;
                 n.v = n.v_rest;
                 n.last_spike_time = current_time_sec;
@@ -724,7 +728,7 @@ void BrainUnico::step() {
                     chaos_modulation = 0.05 + 0.35 * frustration;
                 }
 
-                double effective_weight = s.w * release * (1.0 + 0.6 * s.myelination) * weight_factor * chaos_modulation * 2.5;
+                double effective_weight = s.w * release * (1.0 + 0.6 * s.myelination) * weight_factor * chaos_modulation * 2.5 * s.is_active;
 
                 // Agendar en buffer circular correspondiente
                 int slot = (current_ring_step + s.delay_steps) % 16;
@@ -743,14 +747,16 @@ void BrainUnico::step() {
                 }
 
                 // Apre + LTP (STDP)
-                s.apre += 0.09 * s.is_excitatory;
+                s.apre += 0.015 * s.is_excitatory;
                 double da_post = neurons[s.post].da;
                 double frustration_post = neurons[s.post].frustration;
                 double ser_post = neurons[s.post].ser;
                 
                 // Modulación LTD por neuromodulación (Perfectamente balanceado a da = 0.5)
                 double scale_factor = (((1.0 - da_post) / 0.5) + frustration_post) / (0.5 + 1.5 * ser_post);
-                s.w = std::max(0.0, std::min(s.w + s.apost * s.is_excitatory * s.is_active * scale_factor, 2.0));
+                if (stdp_active) {
+                    s.w = std::max(0.0, std::min(s.w + s.apost * s.is_excitatory * s.is_active * scale_factor, 2.0));
+                }
             }
 
             // Post-spike en neurona i
@@ -772,14 +778,16 @@ void BrainUnico::step() {
                 }
 
                 // Apost + LTD (STDP)
-                s.apost += -0.095 * s.is_excitatory;
+                s.apost += -0.01575 * s.is_excitatory;
                 double da_post = neurons[s.post].da;
                 double ach_post = neurons[s.post].ach;
                 double ser_post = neurons[s.post].ser;
 
                 // Modulación LTP por neuromodulación (Perfectamente balanceado a da = 0.5)
                 double scale_factor = (da_post / 0.5) * (1.0 + 2.5 * ach_post) / (0.5 + 1.5 * ser_post);
-                s.w = std::max(0.0, std::min(s.w + s.apre * s.is_excitatory * s.is_active * scale_factor, 2.0));
+                if (stdp_active) {
+                    s.w = std::max(0.0, std::min(s.w + s.apre * s.is_excitatory * s.is_active * scale_factor, 2.0));
+                }
             }
         }
 
@@ -789,13 +797,6 @@ void BrainUnico::step() {
                 double spikes_norm = (double)astrocytes_spike_counts[a];
                 astrocytes[a].calcium = 0.95 * astrocytes[a].calcium + 0.05 * spikes_norm;
                 astrocytes_spike_counts[a] = 0; // resetear contador
-
-                // Homeostasis glial: si el calcio es alto, elevar el umbral basal para frenar la actividad
-                double thresh_offset = (astrocytes[a].calcium > 0.35) ? 2.5 : 0.0;
-                for (int idx = astrocytes[a].group_start; idx < astrocytes[a].group_end; ++idx) {
-                    double base_val = (neurons[idx].type == 1) ? -55.0 : -57.0;
-                    neurons[idx].v_thresh_base = base_val + thresh_offset;
-                }
             }
         }
 
@@ -938,6 +939,12 @@ void BrainUnico::homeostasis() {
     for (size_t k = 0; k < synapses.size(); ++k) {
         auto& s = synapses[k];
         
+        // Forzar peso a 0.0 si la sinapsis está inactiva (pruning real)
+        if (s.is_active < 0.5) {
+            s.w = 0.0;
+            continue;
+        }
+
         // Evitar el escalado multiplicativo basado en la tasa de disparo para la capa motora (output de clasificación)
         if (s.post >= 50 && s.post < 80) {
             s.w *= decay_factor;
