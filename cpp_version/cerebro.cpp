@@ -484,7 +484,7 @@ void BrainUnico::step() {
             mem.time_ms = time_ms;
             mem.sensory.resize(N_SENSORY);
             for (int i = 0; i < N_SENSORY; ++i) {
-                mem.sensory[i] = neurons[i].I_ext;
+                mem.sensory[i] = sensor_currents[i];
             }
             episodic_buffer.push_back(mem);
             if (episodic_buffer.size() > 1000) {
@@ -616,7 +616,7 @@ void BrainUnico::step() {
             auto& n = neurons[i];
 
             bool is_clamped = false;
-            if (trial_timer < 10.0) {
+            if (brain_state == "AWAKE" && trial_timer < 10.0) {
                 if (true_state == 0) {
                     if ((i >= 20 && i < 44) || (i >= 60 && i < 80)) is_clamped = true;
                 } else if (true_state == 1) {
@@ -1016,11 +1016,11 @@ void BrainUnico::sleep_replay() {
     std::uniform_int_distribution<size_t> mem_dist(0, episodic_buffer.size() - 1);
     const auto& memory = episodic_buffer[mem_dist(gen)];
 
-    // Inyectar en neuronas sensoriales con ráfaga Poisson rápida
+    // Inyectar en neuronas sensoriales con ráfaga Poisson rápida (usando la corriente de sensado almacenada de forma directa)
     for (int i = 0; i < N_SENSORY; ++i) {
-        bool poisson_spike = rand_dist(gen) < 0.2;
+        bool poisson_spike = rand_dist(gen) < 0.5;
         if (poisson_spike) {
-            neurons[i].I_ext = memory.sensory[i] * 45.0;
+            neurons[i].I_ext = memory.sensory[i];
         }
     }
     neuromod.dopamine = std::min(1.0, neuromod.dopamine + 0.02);

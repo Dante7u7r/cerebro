@@ -58,19 +58,23 @@ void VirtualBridge::get_sensory_input(const std::vector<Neuron>& neurons,
         // VACIO: sin señal (los canales permanecen en 0.0 nA)
     }
     else if (csi_true_state == 1) {
-        // SUJETO A: gait lento 1.4 Hz en subportadoras 0-4
+        // SUJETO A: gait lento 1.4 Hz en subportadoras 0-4 + respiración 0.30 Hz (firma biométrica)
+        double breathing = 3.0 * std::sin(2.0 * M_PI * 0.30 * t_sec);
         for (int i = 0; i < 5; ++i) {
             double ph = i * 0.25;
             input_currents[i] = 28.0 + 18.0 * std::sin(2.0 * M_PI * 1.4 * t_sec + ph)
-                                     +  6.0 * std::sin(2.0 * M_PI * 2.8 * t_sec + ph);
+                                     +  6.0 * std::sin(2.0 * M_PI * 2.8 * t_sec + ph)
+                                     + breathing;
         }
     }
     else if (csi_true_state == 2) {
-        // SUJETO B: gait rapido 2.5 Hz en subportadoras 5-9
+        // SUJETO B: gait rapido 2.5 Hz en subportadoras 5-9 + respiración 0.35 Hz (firma biométrica)
+        double breathing = 3.0 * std::sin(2.0 * M_PI * 0.35 * t_sec);
         for (int i = 5; i < 10; ++i) {
             double ph = (i - 5) * 0.35;
             input_currents[i] = 28.0 + 18.0 * std::cos(2.0 * M_PI * 2.5 * t_sec + ph)
-                                     +  6.0 * std::cos(2.0 * M_PI * 5.0 * t_sec + ph);
+                                     +  6.0 * std::cos(2.0 * M_PI * 5.0 * t_sec + ph)
+                                     + breathing;
         }
     }
 
